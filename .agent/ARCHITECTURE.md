@@ -23,7 +23,8 @@ Antigravity Kit is a modular system consisting of:
 ├── skills/                  # 36 Skills
 ├── workflows/               # 11 Slash Commands
 ├── rules/                   # Global Rules
-└── scripts/                 # Master Validation Scripts
+│   └── USER_DEPLOYMENT_PROTOCOLS.md # Mandatory User Rules
+├── scripts/                 # Master Validation Scripts
 ```
 
 ---
@@ -286,3 +287,14 @@ For details, see [scripts/README.md](scripts/README.md)
 | Testing  | `test-engineer`       | testing-patterns, webapp-testing      |
 | Debug    | `debugger`            | systematic-debugging                  |
 | Plan     | `project-planner`     | brainstorming, plan-writing           |
+
+---
+
+## 🛑 Protocolos Mandatórios do Usuário
+
+Regras que DEVEM ser seguidas sem exceção em todas as interações.
+
+1. **Deploy Seguro (Vercel):**
+    - **Sempre** realizar o commit para gerar uma **Preview URL** na Vercel primeiro.
+    - **Nunca** fazer deploy direto em produção sem que o usuário teste e valide o preview.
+    - O deploy em produção (branch `main`) é o passo final após a aprovação.
