@@ -11,7 +11,9 @@ import {
     Package,
     X,
     Loader2,
-    Phone
+    Phone,
+    ChevronDown,
+    Check
 } from 'lucide-react'
 import { bookingService } from '../services/bookingService'
 import { inventoryService } from '../services/inventoryService'
@@ -21,6 +23,105 @@ const statusMap = {
     confirmed: { label: 'Reservado', color: 'text-[#10B981]', bg: 'bg-[#10B981]/10', icon: CheckCircle2 },
     picked_up: { label: 'Retirado', color: 'text-[#1D4ED8]', bg: 'bg-[#1D4ED8]/10', icon: Package },
     returned: { label: 'Finalizado', color: 'text-[#64748B]', bg: 'bg-[#64748B]/10', icon: CheckCircle2 }
+}
+
+const ItemSelector = ({ items, selectedIds, onToggle }) => {
+    const [isOpen, setIsOpen] = useState(false)
+    const [search, setSearch] = useState('')
+
+    const filteredItems = items.filter(item =>
+        item.name.toLowerCase().includes(search.toLowerCase()) ||
+        item.sku?.toLowerCase().includes(search.toLowerCase())
+    )
+
+    const selectedItems = items.filter(item => selectedIds.includes(item.id))
+
+    return (
+        <div className="relative space-y-2">
+            <label className="text-[10px] font-black uppercase tracking-widest text-[#64748B] ml-1 flex justify-between">
+                Itens do Catálogo
+                <span className="text-[#1D4ED8]">{selectedIds.length} selecionados</span>
+            </label>
+
+            <div
+                onClick={() => setIsOpen(!isOpen)}
+                className="w-full bg-[#0B0E14] border border-[#1E293B] rounded-2xl px-5 py-4 cursor-pointer flex items-center justify-between group hover:border-[#1D4ED8]/30 transition-all"
+            >
+                <div className="flex flex-wrap gap-2 flex-1">
+                    {selectedItems.length > 0 ? (
+                        selectedItems.map(item => (
+                            <span key={item.id} className="bg-[#1D4ED8] text-white text-[10px] font-black px-2 py-1 rounded-md flex items-center gap-1 group/item">
+                                {item.name}
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); onToggle(item.id); }}
+                                    className="hover:text-red-300 ml-1"
+                                >
+                                    <X size={10} />
+                                </button>
+                            </span>
+                        ))
+                    ) : (
+                        <span className="text-[#64748B]">Selecione os itens...</span>
+                    )}
+                </div>
+                <ChevronDown size={20} className={`text-[#64748B] transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+            </div>
+
+            {isOpen && (
+                <>
+                    <div className="fixed inset-0 z-10" onClick={() => setIsOpen(false)} />
+                    <div className="absolute z-20 top-full mt-2 w-full bg-[#161B22] border border-[#1E293B] rounded-2xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200 backdrop-blur-xl">
+                        <div className="p-4 border-b border-[#1E293B]">
+                            <div className="relative">
+                                <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#64748B]" />
+                                <input
+                                    autoFocus
+                                    type="text"
+                                    value={search}
+                                    onChange={(e) => setSearch(e.target.value)}
+                                    placeholder="Buscar itens..."
+                                    className="w-full bg-[#0B0E14] border border-[#1E293B] rounded-xl pl-10 pr-4 py-2 text-sm text-white outline-none focus:border-[#1D4ED8]/50 transition-all"
+                                />
+                            </div>
+                        </div>
+                        <div className="max-h-60 overflow-y-auto custom-scrollbar p-2">
+                            {filteredItems.length > 0 ? (
+                                filteredItems.map(item => (
+                                    <div
+                                        key={item.id}
+                                        onClick={() => onToggle(item.id)}
+                                        className={`flex items-center justify-between p-3 rounded-xl cursor-pointer transition-all ${selectedIds.includes(item.id)
+                                                ? 'bg-[#1D4ED8]/10 text-[#1D4ED8]'
+                                                : 'hover:bg-white/5 text-[#94A3B8] hover:text-white'
+                                            }`}
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-8 h-8 rounded-lg bg-[#0B0E14] flex items-center justify-center border border-[#1E293B]">
+                                                {item.imageUrl || item.photoURL ? (
+                                                    <img src={item.imageUrl || item.photoURL} alt="" className="w-full h-full object-cover rounded-lg" />
+                                                ) : (
+                                                    <Package size={14} className="text-[#64748B]" />
+                                                )}
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-bold">{item.name}</p>
+                                                <p className="text-[10px] opacity-60 uppercase font-black tracking-widest">{item.sku || 'N/A'}</p>
+                                            </div>
+                                        </div>
+                                        {selectedIds.includes(item.id) && <Check size={16} />}
+                                    </div>
+                                ))
+                            ) : (
+                                <div className="p-8 text-center text-[#64748B]">
+                                    <p className="text-xs font-bold uppercase tracking-widest">Nenhum item encontrado</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </>
+            )}
+        </div>
+    )
 }
 
 const BookingCard = memo(({ booking, statusMap, onEdit, onDelete }) => {
@@ -51,7 +152,7 @@ const BookingCard = memo(({ booking, statusMap, onEdit, onDelete }) => {
 
             <div className="flex flex-row md:flex-col items-center md:items-end justify-between w-full md:w-auto gap-2">
                 <div className="text-left md:text-right">
-                    <p className="font-black text-xl text-white">R$ {booking.totalValue}</p>
+                    <p className="font-black text-xl text-white">R$ {Number(booking.totalValue).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
                     <span className={`text-[10px] font-black uppercase tracking-widest ${statusMap[booking.status]?.color}`}>
                         {statusMap[booking.status]?.label}
                     </span>
@@ -295,56 +396,42 @@ export default function Bookings({ isModalInitiallyOpen = false, onCloseModal = 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-black uppercase tracking-widest text-[#64748B] ml-1">Cliente</label>
-                                    <input required value={newBooking.customer.name} onChange={e => setNewBooking({ ...newBooking, customer: { ...newBooking.customer, name: e.target.value } })} className="w-full bg-[#0B0E14] border border-[#1E293B] rounded-2xl px-5 py-3 focus:border-[#1D4ED8]/50 outline-none text-white transition-all shadow-inner" placeholder="Nome completo" />
+                                    <input required value={newBooking.customer.name} onChange={e => setNewBooking({ ...newBooking, customer: { ...newBooking.customer, name: e.target.value } })} className="w-full bg-[#0B0E14] border border-[#1E293B] rounded-2xl px-5 py-3 focus:border-[#1D4ED8]/50 outline-none text-white transition-all shadow-inner font-bold" placeholder="Nome completo" />
                                 </div>
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-black uppercase tracking-widest text-[#64748B] ml-1">WhatsApp / Telefone</label>
-                                    <input value={newBooking.customer.phone} onChange={e => setNewBooking({ ...newBooking, customer: { ...newBooking.customer, phone: e.target.value } })} className="w-full bg-[#0B0E14] border border-[#1E293B] rounded-2xl px-5 py-3 focus:border-[#1D4ED8]/50 outline-none text-white transition-all shadow-inner" placeholder="(00) 00000-0000" />
+                                    <input value={newBooking.customer.phone} onChange={e => setNewBooking({ ...newBooking, customer: { ...newBooking.customer, phone: e.target.value } })} className="w-full bg-[#0B0E14] border border-[#1E293B] rounded-2xl px-5 py-3 focus:border-[#1D4ED8]/50 outline-none text-white transition-all shadow-inner font-bold" placeholder="(00) 00000-0000" />
                                 </div>
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-black uppercase tracking-widest text-[#64748B] ml-1">Início (Retirada)</label>
-                                    <input type="date" required value={newBooking.startDate} onChange={e => setNewBooking({ ...newBooking, startDate: e.target.value })} className="w-full bg-[#0B0E14] border border-[#1E293B] rounded-2xl px-5 py-3 focus:border-[#1D4ED8]/50 outline-none text-white transition-all shadow-inner" />
+                                    <input type="date" required value={newBooking.startDate} onChange={e => setNewBooking({ ...newBooking, startDate: e.target.value })} className="w-full bg-[#0B0E14] border border-[#1E293B] rounded-2xl px-5 py-3 focus:border-[#1D4ED8]/50 outline-none text-white transition-all shadow-inner font-bold" />
                                 </div>
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-black uppercase tracking-widest text-[#64748B] ml-1">Término (Devolvida)</label>
-                                    <input type="date" required value={newBooking.endDate} onChange={e => setNewBooking({ ...newBooking, endDate: e.target.value })} className="w-full bg-[#0B0E14] border border-[#1E293B] rounded-2xl px-5 py-3 focus:border-[#1D4ED8]/50 outline-none text-white transition-all shadow-inner" />
+                                    <input type="date" required value={newBooking.endDate} onChange={e => setNewBooking({ ...newBooking, endDate: e.target.value })} className="w-full bg-[#0B0E14] border border-[#1E293B] rounded-2xl px-5 py-3 focus:border-[#1D4ED8]/50 outline-none text-white transition-all shadow-inner font-bold" />
                                 </div>
                             </div>
 
-                            <div className="space-y-3">
-                                <div className="flex justify-between items-end ml-1">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-[#64748B]">Itens do Catálogo</label>
-                                    <span className="text-[10px] text-[#1D4ED8] font-black">{newBooking.items.length} SELECIONADOS</span>
-                                </div>
-                                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 p-1">
-                                    {items.map(item => (
-                                        <button
-                                            key={item.id}
-                                            type="button"
-                                            onClick={() => toggleItemSelection(item.id)}
-                                            className={`p-4 rounded-2xl border text-[11px] font-black uppercase tracking-tighter transition-all flex flex-col items-center gap-2 group ${newBooking.items.includes(item.id)
-                                                ? 'bg-[#1D4ED8] border-[#1D4ED8] text-white shadow-lg shadow-[#1D4ED8]/20'
-                                                : 'bg-[#0B0E14] border-[#1E293B] text-[#64748B] hover:border-[#1D4ED8]/30'
-                                                }`}
-                                        >
-                                            <Package size={16} className={newBooking.items.includes(item.id) ? 'text-white' : 'text-[#64748B]'} />
-                                            <span className="line-clamp-1">{item.name}</span>
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
+                            <ItemSelector
+                                items={items}
+                                selectedIds={newBooking.items}
+                                onToggle={toggleItemSelection}
+                            />
 
                             <div className="space-y-2">
                                 <label className="text-[10px] font-black uppercase tracking-widest text-[#64748B] ml-1">Status da Reserva</label>
-                                <select
-                                    value={newBooking.status}
-                                    onChange={e => setNewBooking({ ...newBooking, status: e.target.value })}
-                                    className="w-full bg-[#0B0E14] border border-[#1E293B] rounded-2xl px-5 py-3 focus:border-[#1D4ED8]/50 outline-none text-white transition-all appearance-none cursor-pointer"
-                                >
-                                    {Object.entries(statusMap).map(([key, value]) => (
-                                        <option key={key} value={key}>{value.label}</option>
-                                    ))}
-                                </select>
+                                <div className="relative">
+                                    <select
+                                        value={newBooking.status}
+                                        onChange={e => setNewBooking({ ...newBooking, status: e.target.value })}
+                                        className="w-full bg-[#0B0E14] border border-[#1E293B] rounded-2xl px-5 py-3 focus:border-[#1D4ED8]/50 outline-none text-white transition-all appearance-none cursor-pointer font-bold"
+                                    >
+                                        {Object.entries(statusMap).map(([key, value]) => (
+                                            <option key={key} value={key}>{value.label}</option>
+                                        ))}
+                                    </select>
+                                    <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 text-[#64748B] pointer-events-none" size={18} />
+                                </div>
                             </div>
 
                             <div className="flex items-center justify-between bg-[#0B0E14] p-6 rounded-[2.5rem] border border-[#1E293B] mt-4 shadow-inner">
