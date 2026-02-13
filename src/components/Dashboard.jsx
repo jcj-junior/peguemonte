@@ -166,10 +166,6 @@ export default function Dashboard({ onNavigate = () => { } }) {
                     <h1 className="text-4xl font-black text-white tracking-tighter">Visão Geral</h1>
                     <p className="text-slate-500 font-medium">Controle total do seu estoque e agenda</p>
                 </div>
-                <div className="flex items-center gap-3 bg-slate-900/50 px-4 py-2 rounded-2xl border border-white/5">
-                    <div className="h-2 w-2 rounded-full bg-emerald-500" />
-                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Sistema Online</p>
-                </div>
             </header>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
