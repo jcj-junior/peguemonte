@@ -5,8 +5,8 @@ import { inventoryService } from '../services/inventoryService'
 
 const statusMap = {
     budget: { label: 'Orçamento', color: 'text-amber-500', bg: 'bg-amber-500/10', icon: Clock },
-    confirmed: { label: 'Reservado', color: 'text-emerald-500', bg: 'bg-emerald-500/10', icon: CheckCircle2 },
-    picked_up: { label: 'Retirado', color: 'text-blue-500', bg: 'bg-blue-500/10', icon: Package },
+    confirmed: { label: 'Reservado', color: 'text-[#b6ec13]', bg: 'bg-[#b6ec13]/10', icon: CheckCircle2 },
+    picked_up: { label: 'Retirado', color: 'text-cyan-400', bg: 'bg-cyan-400/10', icon: Package },
     returned: { label: 'Finalizado', color: 'text-slate-500', bg: 'bg-slate-500/10', icon: CheckCircle2 }
 }
 
@@ -46,7 +46,7 @@ const BookingCard = memo(({ booking, items, statusMap, onEdit, onDelete, onStatu
                 <div className="flex gap-2">
                     <button
                         onClick={() => onEdit(booking)}
-                        className="p-2 bg-slate-900/50 rounded-xl text-blue-400 hover:bg-blue-600 hover:text-white transition-all border border-white/5"
+                        className="p-2 bg-slate-900/50 rounded-xl text-[#b6ec13] hover:bg-[#b6ec13] hover:text-black transition-all border border-white/5"
                     >
                         <Edit size={16} />
                     </button>

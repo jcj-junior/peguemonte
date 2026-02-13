@@ -2,7 +2,18 @@ import { useState } from 'react'
 import Dashboard from './components/Dashboard'
 import Inventory from './components/Inventory'
 import Bookings from './components/Bookings'
-import { LayoutDashboard, Package, Calendar, Settings, Plus } from 'lucide-react'
+import { LayoutDashboard, Package, Calendar, Settings, Plus, BarChart2, Users } from 'lucide-react'
+
+const NavButton = ({ active, onClick, icon: Icon, label }) => (
+    <button
+        onClick={onClick}
+        className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-300 group ${active ? 'bg-[#b6ec13] text-black shadow-lg shadow-[#b6ec13]/10' : 'text-slate-500 hover:text-white hover:bg-white/5'
+            }`}
+    >
+        <Icon size={20} className={active ? 'text-black' : 'group-hover:scale-110 transition-transform'} />
+        <span className="text-sm font-bold tracking-tight">{label}</span>
+    </button>
+)
 
 function App() {
     const [activeTab, setActiveTab] = useState('dashboard')
@@ -10,51 +21,61 @@ function App() {
     const [openBookingModal, setOpenBookingModal] = useState(false)
 
     return (
-        <div className="min-h-screen pb-20 md:pb-0 md:pl-20">
+        <div className="min-h-screen bg-black text-slate-200 flex">
             {/* Sidebar - Desktop */}
-            <nav className="fixed left-0 top-0 hidden h-full w-20 flex-col items-center bg-slate-900 py-8 border-r border-white/10 md:flex">
-                <div className="mb-10 text-blue-500">
-                    <Package size={32} />
+            <nav className="fixed left-0 top-0 hidden h-full w-64 flex-col bg-[#0a0c0a] border-r border-white/5 md:flex z-50">
+                <div className="p-8 flex items-center gap-3">
+                    <div className="bg-[#b6ec13] p-2 rounded-lg">
+                        <Package size={24} className="text-black" />
+                    </div>
+                    <span className="text-xl font-black text-white tracking-tighter italic">Pegue<span className="text-[#b6ec13]">e</span>Monte</span>
                 </div>
-                <div className="flex flex-col gap-8">
-                    <button onClick={() => setActiveTab('dashboard')} className={activeTab === 'dashboard' ? 'text-blue-500' : 'text-slate-400'}>
-                        <LayoutDashboard size={24} />
-                    </button>
-                    <button onClick={() => setActiveTab('inventory')} className={activeTab === 'inventory' ? 'text-blue-500' : 'text-slate-400'}>
-                        <Package size={24} />
-                    </button>
-                    <button onClick={() => setActiveTab('calendar')} className={activeTab === 'calendar' ? 'text-blue-500' : 'text-slate-400'}>
-                        <Calendar size={24} />
-                    </button>
-                    <button onClick={() => setActiveTab('settings')} className={activeTab === 'settings' ? 'text-blue-500' : 'text-slate-400'}>
-                        <Settings size={24} />
-                    </button>
+
+                <div className="flex-1 px-4 py-4 space-y-2">
+                    <NavButton active={activeTab === 'dashboard'} onClick={() => setActiveTab('dashboard')} icon={LayoutDashboard} label="Dashboard" />
+                    <NavButton active={activeTab === 'inventory'} onClick={() => setActiveTab('inventory')} icon={Package} label="Inventory" />
+                    <NavButton active={activeTab === 'calendar'} onClick={() => setActiveTab('calendar')} icon={Calendar} label="Calendar" />
+                    <NavButton active={activeTab === 'analytics'} onClick={() => setActiveTab('analytics')} icon={BarChart2} label="Analytics" />
+                    <NavButton active={activeTab === 'clients'} onClick={() => setActiveTab('clients')} icon={Users} label="Clients" />
+                </div>
+
+                <div className="p-6 border-t border-white/5">
+                    <div className="flex items-center gap-3 p-2 rounded-2xl hover:bg-white/5 transition-colors cursor-pointer group">
+                        <div className="h-10 w-10 rounded-full bg-slate-800 flex items-center justify-center border border-white/10 overflow-hidden">
+                            <span className="text-xs font-bold">MC</span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <p className="text-sm font-bold text-white truncate">Mariana Costa</p>
+                            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Manager</p>
+                        </div>
+                        <Settings size={16} className="text-slate-600 group-hover:text-white transition-colors" />
+                    </div>
                 </div>
             </nav>
 
             {/* Bottom Nav - Mobile */}
-            <nav className="fixed bottom-0 left-0 flex w-full justify-around bg-slate-900 py-4 border-t border-white/10 md:hidden glass z-50">
-                <button onClick={() => setActiveTab('dashboard')} className={activeTab === 'dashboard' ? 'text-blue-500' : 'text-slate-400'}>
+            <nav className="fixed bottom-0 left-0 flex w-full justify-around bg-black/80 backdrop-blur-xl py-4 border-t border-white/5 md:hidden z-50">
+                <button onClick={() => setActiveTab('dashboard')} className={activeTab === 'dashboard' ? 'text-[#b6ec13]' : 'text-slate-500'}>
                     <LayoutDashboard size={24} />
                 </button>
-                <button onClick={() => setActiveTab('inventory')} className={activeTab === 'inventory' ? 'text-blue-500' : 'text-slate-400'}>
+                <button onClick={() => setActiveTab('inventory')} className={activeTab === 'inventory' ? 'text-[#b6ec13]' : 'text-slate-500'}>
                     <Package size={24} />
                 </button>
                 <div
                     onClick={() => { setActiveTab('calendar'); setOpenBookingModal(true); }}
-                    className="relative -top-10 flex h-16 w-16 items-center justify-center rounded-full bg-blue-600 text-white shadow-lg shadow-blue-500/50 cursor-pointer"
+                    className="relative -top-10 flex h-14 w-14 items-center justify-center rounded-full bg-[#b6ec13] text-black shadow-lg shadow-[#b6ec13]/20 cursor-pointer"
                 >
-                    <Plus size={32} />
+                    <Plus size={28} />
                 </div>
-                <button onClick={() => setActiveTab('calendar')} className={activeTab === 'calendar' ? 'text-blue-500' : 'text-slate-400'}>
+                <button onClick={() => setActiveTab('calendar')} className={activeTab === 'calendar' ? 'text-[#b6ec13]' : 'text-slate-500'}>
                     <Calendar size={24} />
                 </button>
-                <button onClick={() => setActiveTab('settings')} className={activeTab === 'settings' ? 'text-blue-500' : 'text-slate-400'}>
-                    <Settings size={24} />
+                <button onClick={() => setActiveTab('clients')} className={activeTab === 'clients' ? 'text-[#b6ec13]' : 'text-slate-500'}>
+                    <Users size={24} />
                 </button>
             </nav>
 
-            <main className="p-4 md:p-8 max-w-7xl mx-auto">
+            <main className="flex-1 md:ml-64 p-4 md:p-10 min-h-screen">
                 {activeTab === 'dashboard' && (
                     <Dashboard
                         onNavigate={(tab, openModal) => {

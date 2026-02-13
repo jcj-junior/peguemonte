@@ -21,7 +21,7 @@ const ItemCard = memo(({ item, onEdit, onDelete }) => (
             <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0">
                 <button
                     onClick={() => onEdit(item)}
-                    className="p-2 bg-slate-900/90 rounded-xl text-blue-400 hover:bg-blue-600 hover:text-white transition-all shadow-xl backdrop-blur-md"
+                    className="p-2 bg-slate-900/90 rounded-xl text-[#b6ec13] hover:bg-[#b6ec13] hover:text-black transition-all shadow-xl backdrop-blur-md"
                     title="Editar item"
                 >
                     <Edit size={18} />
@@ -37,11 +37,11 @@ const ItemCard = memo(({ item, onEdit, onDelete }) => (
         </div>
         <div className="p-4 flex flex-col flex-1">
             <div className="flex items-start justify-between mb-2">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-blue-400 bg-blue-500/10 px-2 py-1 rounded-lg">
+                <span className="text-[10px] font-black uppercase tracking-widest text-[#b6ec13] bg-[#b6ec13]/10 px-2 py-1 rounded-lg">
                     {item.category || 'Sem Categoria'}
                 </span>
             </div>
-            <h3 className="font-bold text-lg text-white group-hover:text-blue-400 transition-colors line-clamp-1">{item.name}</h3>
+            <h3 className="font-bold text-lg text-white group-hover:text-[#b6ec13] transition-colors line-clamp-1">{item.name}</h3>
             <p className="text-sm text-slate-400 line-clamp-2 mt-2 flex-1 italic">
                 {item.description || 'Sem descrição detalhada'}
             </p>
