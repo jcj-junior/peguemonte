@@ -243,14 +243,9 @@ export default function Bookings({ isModalInitiallyOpen = false, onCloseModal = 
                 />
             </div>
 
-            {loading ? (
-                <div className="flex flex-col items-center justify-center py-40 gap-4 text-slate-500">
-                    <Loader2 size={40} className="animate-spin text-emerald-500" />
-                    <p className="font-medium animate-pulse">Carregando cronograma...</p>
-                </div>
-            ) : filteredBookings.length > 0 ? (
-                <div className="space-y-4">
-                    {filteredBookings.map(booking => (
+            <div className="grid grid-cols-1 gap-6">
+                {filteredBookings.length > 0 ? (
+                    filteredBookings.map(booking => (
                         <BookingCard
                             key={booking.id}
                             booking={booking}
@@ -259,15 +254,15 @@ export default function Bookings({ isModalInitiallyOpen = false, onCloseModal = 
                             onEdit={handleEdit}
                             onDelete={handleDelete}
                         />
-                    ))}
-                </div>
-            ) : (
-                <div className="text-center py-40 bg-slate-900/20 rounded-3xl border border-dashed border-white/10">
-                    <CalendarIcon size={64} className="mx-auto mb-4 text-slate-700" />
-                    <p className="text-slate-500 text-lg">Nenhuma reserva encontrada.</p>
-                </div>
-            )}
-
+                    ))
+                ) : (
+                    <div className="py-40 flex flex-col items-center justify-center border-2 border-dashed border-[#1E293B] rounded-[3rem] opacity-40">
+                        <CalendarIcon size={60} className="text-[#64748B] mb-4" />
+                        <h3 className="text-xl font-black text-white">Nenhuma reserva encontrada</h3>
+                        <p className="text-[#94A3B8] font-bold uppercase text-[10px] tracking-widest mt-2">Agende seu primeiro evento</p>
+                    </div>
+                )}
+            </div>
             {/* Modal de Reserva Premium */}
             {isModalOpen && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/95 backdrop-blur-lg transition-all duration-300">

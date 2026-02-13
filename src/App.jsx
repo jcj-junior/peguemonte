@@ -33,11 +33,11 @@ function App() {
                 </div>
 
                 <div className="flex-1 px-4 py-4 space-y-2">
-                    <NavButton active={activeTab === 'dashboard'} onClick={() => setActiveTab('dashboard')} icon={LayoutDashboard} label="Dashboard" />
-                    <NavButton active={activeTab === 'inventory'} onClick={() => setActiveTab('inventory')} icon={Package} label="Inventory" />
-                    <NavButton active={activeTab === 'calendar'} onClick={() => setActiveTab('calendar')} icon={Calendar} label="Calendar" />
-                    <NavButton active={activeTab === 'analytics'} onClick={() => setActiveTab('analytics')} icon={BarChart2} label="Analytics" />
-                    <NavButton active={activeTab === 'clients'} onClick={() => setActiveTab('clients')} icon={Users} label="Clients" />
+                    <NavButton active={activeTab === 'dashboard'} onClick={() => setActiveTab('dashboard')} icon={LayoutDashboard} label="Painel" />
+                    <NavButton active={activeTab === 'inventory'} onClick={() => setActiveTab('inventory')} icon={Package} label="Estoque" />
+                    <NavButton active={activeTab === 'calendar'} onClick={() => setActiveTab('calendar')} icon={Calendar} label="Agenda" />
+                    <NavButton active={activeTab === 'analytics'} onClick={() => setActiveTab('analytics')} icon={BarChart2} label="Relatórios" />
+                    <NavButton active={activeTab === 'clients'} onClick={() => setActiveTab('clients')} icon={Users} label="Clientes" />
                 </div>
 
                 <div className="p-6 border-t border-[#1E293B]">
@@ -47,7 +47,7 @@ function App() {
                         </div>
                         <div className="flex-1 min-w-0">
                             <p className="text-sm font-bold text-white truncate">Mariana Costa</p>
-                            <p className="text-[10px] text-[#94A3B8] font-bold uppercase tracking-wider">Manager</p>
+                            <p className="text-[10px] text-[#94A3B8] font-bold uppercase tracking-wider">Gerente</p>
                         </div>
                         <Settings size={16} className="text-[#64748B] group-hover:text-white transition-colors" />
                     </div>
