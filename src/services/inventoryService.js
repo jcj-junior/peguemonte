@@ -1,46 +1,84 @@
-import { db, storage } from "../firebase/config";
-import {
-    collection,
-    addDoc,
-    getDocs,
-    updateDoc,
-    deleteDoc,
-    doc,
-    query,
-    where
-} from "firebase/firestore";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-
-const itemsCollection = collection(db, "items");
+import { supabase } from "../supabase";
 
 export const inventoryService = {
     async getAllItems() {
-        const snapshot = await getDocs(itemsCollection);
-        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        try {
+            const { data, error } = await supabase
+                .from('items')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (error) throw error;
+            // Mapeia snake_case do banco para camelCase do código
+            return data.map(item => ({
+                ...item,
+                imageUrl: item.image_url
+            }));
+        } catch (error) {
+            console.error("Erro ao carregar itens:", error);
+            throw error;
+        }
     },
 
-    async createItem(item, imageFile) {
-        let photoURL = "";
-        if (imageFile) {
-            const storageRef = ref(storage, `items/${Date.now()}_${imageFile.name}`);
-            const uploadSnapshot = await uploadBytes(storageRef, imageFile);
-            photoURL = await getDownloadURL(uploadSnapshot.ref);
-        }
+    async createItem(item) {
+        try {
+            const payload = {
+                name: item.name,
+                category: item.category,
+                price: item.price,
+                quantity: item.quantity,
+                description: item.description,
+                image_url: item.imageUrl
+            };
 
-        return await addDoc(itemsCollection, {
-            ...item,
-            photoURL,
-            createdAt: new Date().toISOString()
-        });
+            const { data, error } = await supabase
+                .from('items')
+                .insert([payload])
+                .select()
+                .single();
+
+            if (error) throw error;
+            return { ...data, imageUrl: data.image_url };
+        } catch (error) {
+            console.error("Erro ao criar item:", error);
+            throw error;
+        }
     },
 
     async updateItem(id, updates) {
-        const itemRef = doc(db, "items", id);
-        await updateDoc(itemRef, updates);
+        try {
+            const payload = {};
+            if (updates.name) payload.name = updates.name;
+            if (updates.category) payload.category = updates.category;
+            if (updates.price) payload.price = updates.price;
+            if (updates.quantity) payload.quantity = updates.quantity;
+            if (updates.description) payload.description = updates.description;
+            if (updates.imageUrl) payload.image_url = updates.imageUrl;
+
+            const { data, error } = await supabase
+                .from('items')
+                .update(payload)
+                .eq('id', id);
+
+            if (error) throw error;
+            return data;
+        } catch (error) {
+            console.error("Erro ao atualizar item:", error);
+            throw error;
+        }
     },
 
     async deleteItem(id) {
-        const itemRef = doc(db, "items", id);
-        await deleteDoc(itemRef);
+        try {
+            const { error } = await supabase
+                .from('items')
+                .delete()
+                .eq('id', id);
+
+            if (error) throw error;
+        } catch (error) {
+            console.error("Erro ao excluir item:", error);
+            throw error;
+        }
     }
 };

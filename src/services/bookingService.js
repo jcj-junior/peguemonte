@@ -1,67 +1,118 @@
-import { db } from "../firebase/config";
-import {
-    collection,
-    addDoc,
-    getDocs,
-    updateDoc,
-    doc,
-    query,
-    where,
-    orderBy
-} from "firebase/firestore";
-
-const bookingsCollection = collection(db, "bookings");
+import { supabase } from "../supabase";
 
 export const bookingService = {
     async getAllBookings() {
-        const q = query(bookingsCollection, orderBy("startDate", "asc"));
-        const snapshot = await getDocs(q);
-        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        try {
+            const { data, error } = await supabase
+                .from('bookings')
+                .select('*')
+                .order('start_date', { ascending: true });
+
+            if (error) throw error;
+            // Mapeia snake_case para camelCase
+            return data.map(b => ({
+                id: b.id,
+                customer: b.customer,
+                items: b.items,
+                startDate: b.start_date,
+                endDate: b.end_date,
+                totalValue: b.total_value,
+                status: b.status,
+                createdAt: b.created_at
+            }));
+        } catch (error) {
+            console.error("Erro ao carregar reservas:", error);
+            throw error;
+        }
     },
 
     async createBooking(booking) {
-        return await addDoc(bookingsCollection, {
-            ...booking,
-            status: "budget", // Status inicial
-            createdAt: new Date().toISOString()
-        });
+        try {
+            const payload = {
+                customer: booking.customer,
+                items: booking.items,
+                start_date: booking.startDate,
+                end_date: booking.endDate,
+                total_value: booking.totalValue,
+                status: "budget"
+            };
+
+            const { data, error } = await supabase
+                .from('bookings')
+                .insert([payload])
+                .select()
+                .single();
+
+            if (error) throw error;
+            return data;
+        } catch (error) {
+            console.error("Erro ao criar reserva:", error);
+            throw error;
+        }
     },
 
-    async updateBookingStatus(id, status) {
-        const bookingRef = doc(db, "bookings", id);
-        await updateDoc(bookingRef, { status });
+    async updateBooking(id, updates) {
+        try {
+            const payload = {};
+            if (updates.customer) payload.customer = updates.customer;
+            if (updates.items) payload.items = updates.items;
+            if (updates.startDate) payload.start_date = updates.startDate;
+            if (updates.endDate) payload.end_date = updates.endDate;
+            if (updates.totalValue) payload.total_value = updates.totalValue;
+            if (updates.status) payload.status = updates.status;
+
+            const { data, error } = await supabase
+                .from('bookings')
+                .update(payload)
+                .eq('id', id);
+
+            if (error) throw error;
+            return data;
+        } catch (error) {
+            console.error("Erro ao atualizar reserva:", error);
+            throw error;
+        }
     },
 
-    /**
-     * Verifica a disponibilidade de itens para um período
-     * @param {string[]} itemIds 
-     * @param {string} startDate 
-     * @param {string} endDate 
-     * @returns {Promise<string[]>} IDs dos itens que estão ocupados
-     */
+    async deleteBooking(id) {
+        try {
+            const { error } = await supabase
+                .from('bookings')
+                .delete()
+                .eq('id', id);
+
+            if (error) throw error;
+        } catch (error) {
+            console.error("Erro ao excluir reserva:", error);
+            throw error;
+        }
+    },
+
     async checkAvailability(itemIds, startDate, endDate) {
-        // Busca reservas que se sobrepõem ao período e estão confirmadas ou retiradas
-        const q = query(
-            bookingsCollection,
-            where("status", "in", ["confirmed", "picked_up"]),
-            where("startDate", "<=", endDate)
-        );
+        try {
+            const { data, error } = await supabase
+                .from('bookings')
+                .select('items, end_date')
+                .in('status', ['confirmed', 'picked_up'])
+                .lte('start_date', endDate);
 
-        const snapshot = await getDocs(q);
-        const busyItems = new Set();
+            if (error) throw error;
 
-        snapshot.docs.forEach(doc => {
-            const booking = doc.data();
-            // Verificação adicional de sobreposição no lado do cliente (Firestore tem limitações em buscas complexas)
-            if (booking.endDate >= startDate) {
-                booking.items.forEach(itemId => {
-                    if (itemIds.includes(itemId)) {
-                        busyItems.add(itemId);
-                    }
-                });
-            }
-        });
+            const busyItems = new Set();
+            data.forEach(booking => {
+                if (booking.end_date >= startDate) {
+                    booking.items.forEach(itemId => {
+                        if (itemIds.includes(itemId)) {
+                            busyItems.add(itemId);
+                        }
+                    });
+                }
+            });
 
-        return Array.from(busyItems);
+            return Array.from(busyItems);
+        } catch (error) {
+            console.error("Erro ao verificar disponibilidade:", error);
+            return [];
+        }
     }
 };
