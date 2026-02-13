@@ -251,7 +251,7 @@ export default function Inventory({ isModalInitiallyOpen = false, onCloseModal =
 
             {isModalOpen && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-xl transition-all duration-300">
-                    <div className="bg-[#161B22] w-full max-w-xl rounded-[2.5rem] border border-[#1E293B] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
+                    <div className="bg-[#161B22] w-full max-w-xl max-h-[90vh] rounded-[2.5rem] border border-[#1E293B] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 flex flex-col">
                         <div className="flex justify-between items-center p-8 bg-gradient-to-r from-[#1D4ED8]/10 to-transparent border-b border-[#1E293B]">
                             <div>
                                 <h2 className="text-2xl font-black text-white tracking-tighter">
@@ -267,7 +267,7 @@ export default function Inventory({ isModalInitiallyOpen = false, onCloseModal =
                             </button>
                         </div>
 
-                        <form onSubmit={handleSubmit} className="p-8 space-y-6">
+                        <form onSubmit={handleSubmit} className="p-8 space-y-6 overflow-y-auto custom-scrollbar flex-1">
                             <div className="space-y-2">
                                 <label className="text-[10px] font-black uppercase tracking-widest text-[#64748B] ml-1">Nome do Item</label>
                                 <input

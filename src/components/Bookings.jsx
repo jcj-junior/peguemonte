@@ -91,8 +91,8 @@ const ItemSelector = ({ items, selectedIds, onToggle }) => {
                                         key={item.id}
                                         onClick={() => onToggle(item.id)}
                                         className={`flex items-center justify-between p-3 rounded-xl cursor-pointer transition-all ${selectedIds.includes(item.id)
-                                                ? 'bg-[#1D4ED8]/10 text-[#1D4ED8]'
-                                                : 'hover:bg-white/5 text-[#94A3B8] hover:text-white'
+                                            ? 'bg-[#1D4ED8]/10 text-[#1D4ED8]'
+                                            : 'hover:bg-white/5 text-[#94A3B8] hover:text-white'
                                             }`}
                                     >
                                         <div className="flex items-center gap-3">
@@ -392,7 +392,7 @@ export default function Bookings({ isModalInitiallyOpen = false, onCloseModal = 
                             </button>
                         </div>
 
-                        <form onSubmit={handleSubmit} className="p-8 space-y-6 overflow-y-auto custom-scrollbar">
+                        <form onSubmit={handleSubmit} className="p-8 space-y-6 overflow-y-auto custom-scrollbar flex-1">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-black uppercase tracking-widest text-[#64748B] ml-1">Cliente</label>
