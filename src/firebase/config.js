@@ -1,9 +1,5 @@
 import { initializeApp, setLogLevel } from "firebase/app";
-import {
-    initializeFirestore,
-    persistentLocalCache,
-    getFirestore
-} from "firebase/firestore";
+import { initializeFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 import { getAuth } from "firebase/auth";
 

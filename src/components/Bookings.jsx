@@ -1,5 +1,18 @@
 import { useState, useEffect, useMemo, memo } from 'react'
-import { Plus, Search, Calendar as CalendarIcon, Filter, ChevronRight, CheckCircle2, Clock, Package, AlertCircle, Edit, Trash2, X, Loader2, Phone } from 'lucide-react'
+import {
+    Edit,
+    Trash2,
+    Calendar as CalendarIcon,
+    Clock,
+    CheckCircle2,
+    AlertCircle,
+    Plus,
+    Search,
+    Package,
+    X,
+    Loader2,
+    Phone
+} from 'lucide-react'
 import { bookingService } from '../services/bookingService'
 import { inventoryService } from '../services/inventoryService'
 
@@ -10,7 +23,7 @@ const statusMap = {
     returned: { label: 'Finalizado', color: 'text-[#64748B]', bg: 'bg-[#64748B]/10', icon: CheckCircle2 }
 }
 
-const BookingCard = memo(({ booking, items, statusMap, onEdit, onDelete, onStatusChange }) => {
+const BookingCard = memo(({ booking, statusMap, onEdit, onDelete }) => {
     const StatusIcon = statusMap[booking.status]?.icon || AlertCircle
 
     return (
@@ -88,16 +101,11 @@ export default function Bookings({ isModalInitiallyOpen = false, onCloseModal = 
 
     useEffect(() => {
         loadData()
-
-        const timer = setTimeout(() => {
-            setLoading(false)
-        }, 3000)
-
-        return () => clearTimeout(timer)
     }, [])
 
     async function loadData() {
         try {
+            setLoading(true)
             const [bookingsData, itemsData] = await Promise.all([
                 bookingService.getAllBookings(),
                 inventoryService.getAllItems()
@@ -162,7 +170,6 @@ export default function Bookings({ isModalInitiallyOpen = false, onCloseModal = 
 
         setIsSubmitting(true)
         try {
-            // Verificar disponibilidade apenas se for confirmado/retirado e se for nova ou data mudou
             const needsAvailabilityCheck = ["confirmed", "picked_up"].includes(newBooking.status)
 
             if (needsAvailabilityCheck) {
@@ -172,7 +179,6 @@ export default function Bookings({ isModalInitiallyOpen = false, onCloseModal = 
                     newBooking.endDate
                 )
 
-                // Se estiver editando, remove os próprios itens da verificação de ocupado
                 const actualBusyItems = editingBooking
                     ? busyItems.filter(itemId => !editingBooking.items.includes(itemId))
                     : busyItems
@@ -213,19 +219,26 @@ export default function Bookings({ isModalInitiallyOpen = false, onCloseModal = 
         }
     }
 
+    if (loading) return (
+        <div className="flex flex-col items-center justify-center py-40 gap-4">
+            <Loader2 size={40} className="animate-spin text-[#1D4ED8]" />
+            <p className="text-[#94A3B8] font-bold tracking-widest uppercase text-xs">Carregando agenda...</p>
+        </div>
+    )
+
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-900/40 p-6 rounded-3xl border border-white/5 backdrop-blur-md">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-[#161B22] p-6 rounded-3xl border border-[#1E293B] shadow-2xl">
                 <div>
-                    <h1 className="text-4xl font-black text-white">Agenda</h1>
-                    <p className="text-slate-400 mt-1 flex items-center gap-2">
-                        <CalendarIcon size={16} className="text-emerald-500" />
+                    <h1 className="text-4xl font-black text-white tracking-tighter">Agenda</h1>
+                    <p className="text-[#94A3B8] mt-1 flex items-center gap-2 font-bold uppercase text-[10px] tracking-widest">
+                        <CalendarIcon size={14} className="text-[#1D4ED8]" />
                         {bookings.length} locações registradas
                     </p>
                 </div>
                 <button
                     onClick={() => setIsModalOpen(true)}
-                    className="w-full sm:w-auto bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-2xl flex items-center justify-center gap-2 transition-all font-bold shadow-lg shadow-blue-600/30 active:scale-95 group"
+                    className="w-full sm:w-auto bg-[#1D4ED8] hover:bg-[#1e40af] text-white px-6 py-3 rounded-2xl flex items-center justify-center gap-2 transition-all font-bold shadow-lg shadow-[#1D4ED8]/20 active:scale-95 group"
                 >
                     <Plus size={22} className="group-hover:rotate-90 transition-transform duration-300" />
                     Nova Locação
@@ -233,13 +246,13 @@ export default function Bookings({ isModalInitiallyOpen = false, onCloseModal = 
             </div>
 
             <div className="relative group">
-                <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-emerald-400 transition-colors" size={20} />
+                <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-[#64748B] group-focus-within:text-[#1D4ED8] transition-colors" size={20} />
                 <input
                     type="text"
                     value={searchTerm}
                     onChange={e => setSearchTerm(e.target.value)}
                     placeholder="Buscar por cliente ou telefone..."
-                    className="w-full bg-slate-800/30 border border-white/10 rounded-2xl py-4 pl-14 pr-6 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-white placeholder-slate-500 backdrop-blur-sm transition-all text-lg"
+                    className="w-full bg-[#161B22] border border-[#1E293B] rounded-2xl py-4 pl-14 pr-6 focus:outline-none focus:border-[#1D4ED8]/30 text-white placeholder-[#64748B] transition-all text-lg shadow-inner"
                 />
             </div>
 
@@ -249,32 +262,31 @@ export default function Bookings({ isModalInitiallyOpen = false, onCloseModal = 
                         <BookingCard
                             key={booking.id}
                             booking={booking}
-                            items={items}
                             statusMap={statusMap}
                             onEdit={handleEdit}
                             onDelete={handleDelete}
                         />
                     ))
                 ) : (
-                    <div className="py-40 flex flex-col items-center justify-center border-2 border-dashed border-[#1E293B] rounded-[3rem] opacity-40">
+                    <div className="py-20 flex flex-col items-center justify-center border-2 border-dashed border-[#1E293B] rounded-[3rem] opacity-30">
                         <CalendarIcon size={60} className="text-[#64748B] mb-4" />
                         <h3 className="text-xl font-black text-white">Nenhuma reserva encontrada</h3>
                         <p className="text-[#94A3B8] font-bold uppercase text-[10px] tracking-widest mt-2">Agende seu primeiro evento</p>
                     </div>
                 )}
             </div>
-            {/* Modal de Reserva Premium */}
+
             {isModalOpen && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/95 backdrop-blur-lg transition-all duration-300">
-                    <div className="bg-slate-900 w-full max-w-2xl max-h-[90vh] overflow-hidden rounded-[2.5rem] border border-white/10 shadow-[0_0_50px_-12px_rgba(16,185,129,0.2)] flex flex-col animate-in zoom-in-95 duration-300">
-                        <div className="flex justify-between items-center p-8 bg-gradient-to-r from-emerald-600/10 to-transparent">
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-xl transition-all duration-300">
+                    <div className="bg-[#161B22] w-full max-w-2xl max-h-[90vh] overflow-hidden rounded-[2.5rem] border border-[#1E293B] shadow-2xl flex flex-col animate-in zoom-in-95 duration-300">
+                        <div className="flex justify-between items-center p-8 bg-gradient-to-r from-[#1D4ED8]/10 to-transparent border-b border-[#1E293B]">
                             <div>
-                                <h2 className="text-2xl font-black text-white">
+                                <h2 className="text-2xl font-black text-white tracking-tighter">
                                     {editingBooking ? 'Editar Locação' : 'Nova Locação'}
                                 </h2>
-                                <p className="text-sm text-slate-400">Detalhes do contrato e período</p>
+                                <p className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-widest">Detalhes do contrato e período</p>
                             </div>
-                            <button onClick={handleClose} className="p-3 bg-slate-800 rounded-2xl text-slate-400 hover:text-white transition-all active:scale-90">
+                            <button onClick={handleClose} className="p-3 bg-[#0B0E14] border border-[#1E293B] rounded-2xl text-[#64748B] hover:text-white transition-all active:scale-90">
                                 <X size={24} />
                             </button>
                         </div>
@@ -282,27 +294,27 @@ export default function Bookings({ isModalInitiallyOpen = false, onCloseModal = 
                         <form onSubmit={handleSubmit} className="p-8 space-y-6 overflow-y-auto custom-scrollbar">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-2">
-                                    <label className="text-xs font-bold uppercase tracking-widest text-slate-500 ml-1">Cliente</label>
-                                    <input required value={newBooking.customer.name} onChange={e => setNewBooking({ ...newBooking, customer: { ...newBooking.customer, name: e.target.value } })} className="w-full bg-slate-950/50 border border-white/5 rounded-2xl px-5 py-3 focus:ring-2 focus:ring-emerald-500 outline-none text-white transition-all" placeholder="Nome completo" />
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-[#64748B] ml-1">Cliente</label>
+                                    <input required value={newBooking.customer.name} onChange={e => setNewBooking({ ...newBooking, customer: { ...newBooking.customer, name: e.target.value } })} className="w-full bg-[#0B0E14] border border-[#1E293B] rounded-2xl px-5 py-3 focus:border-[#1D4ED8]/50 outline-none text-white transition-all shadow-inner" placeholder="Nome completo" />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-xs font-bold uppercase tracking-widest text-slate-500 ml-1">WhatsApp / Telefone</label>
-                                    <input value={newBooking.customer.phone} onChange={e => setNewBooking({ ...newBooking, customer: { ...newBooking.customer, phone: e.target.value } })} className="w-full bg-slate-950/50 border border-white/5 rounded-2xl px-5 py-3 focus:ring-2 focus:ring-emerald-500 outline-none text-white transition-all" placeholder="(00) 00000-0000" />
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-[#64748B] ml-1">WhatsApp / Telefone</label>
+                                    <input value={newBooking.customer.phone} onChange={e => setNewBooking({ ...newBooking, customer: { ...newBooking.customer, phone: e.target.value } })} className="w-full bg-[#0B0E14] border border-[#1E293B] rounded-2xl px-5 py-3 focus:border-[#1D4ED8]/50 outline-none text-white transition-all shadow-inner" placeholder="(00) 00000-0000" />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-xs font-bold uppercase tracking-widest text-slate-500 ml-1">Início (Retirada)</label>
-                                    <input type="date" required value={newBooking.startDate} onChange={e => setNewBooking({ ...newBooking, startDate: e.target.value })} className="w-full bg-slate-950/50 border border-white/5 rounded-2xl px-5 py-3 focus:ring-2 focus:ring-emerald-500 outline-none text-white transition-all" />
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-[#64748B] ml-1">Início (Retirada)</label>
+                                    <input type="date" required value={newBooking.startDate} onChange={e => setNewBooking({ ...newBooking, startDate: e.target.value })} className="w-full bg-[#0B0E14] border border-[#1E293B] rounded-2xl px-5 py-3 focus:border-[#1D4ED8]/50 outline-none text-white transition-all shadow-inner" />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-xs font-bold uppercase tracking-widest text-slate-500 ml-1">Término (Devolvida)</label>
-                                    <input type="date" required value={newBooking.endDate} onChange={e => setNewBooking({ ...newBooking, endDate: e.target.value })} className="w-full bg-slate-950/50 border border-white/5 rounded-2xl px-5 py-3 focus:ring-2 focus:ring-emerald-500 outline-none text-white transition-all" />
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-[#64748B] ml-1">Término (Devolvida)</label>
+                                    <input type="date" required value={newBooking.endDate} onChange={e => setNewBooking({ ...newBooking, endDate: e.target.value })} className="w-full bg-[#0B0E14] border border-[#1E293B] rounded-2xl px-5 py-3 focus:border-[#1D4ED8]/50 outline-none text-white transition-all shadow-inner" />
                                 </div>
                             </div>
 
                             <div className="space-y-3">
                                 <div className="flex justify-between items-end ml-1">
-                                    <label className="text-xs font-bold uppercase tracking-widest text-slate-500">Itens do Catálogo</label>
-                                    <span className="text-[10px] text-emerald-400 font-black">{newBooking.items.length} SELECIONADOS</span>
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-[#64748B]">Itens do Catálogo</label>
+                                    <span className="text-[10px] text-[#1D4ED8] font-black">{newBooking.items.length} SELECIONADOS</span>
                                 </div>
                                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 p-1">
                                     {items.map(item => (
@@ -311,11 +323,11 @@ export default function Bookings({ isModalInitiallyOpen = false, onCloseModal = 
                                             type="button"
                                             onClick={() => toggleItemSelection(item.id)}
                                             className={`p-4 rounded-2xl border text-[11px] font-black uppercase tracking-tighter transition-all flex flex-col items-center gap-2 group ${newBooking.items.includes(item.id)
-                                                ? 'bg-emerald-600 border-emerald-400 text-white shadow-lg shadow-emerald-600/20 scale-[0.98]'
-                                                : 'bg-slate-950/40 border-white/5 text-slate-500 hover:border-white/20'
+                                                ? 'bg-[#1D4ED8] border-[#1D4ED8] text-white shadow-lg shadow-[#1D4ED8]/20'
+                                                : 'bg-[#0B0E14] border-[#1E293B] text-[#64748B] hover:border-[#1D4ED8]/30'
                                                 }`}
                                         >
-                                            <Package size={16} className={newBooking.items.includes(item.id) ? 'text-white' : 'text-slate-600'} />
+                                            <Package size={16} className={newBooking.items.includes(item.id) ? 'text-white' : 'text-[#64748B]'} />
                                             <span className="line-clamp-1">{item.name}</span>
                                         </button>
                                     ))}
@@ -323,11 +335,11 @@ export default function Bookings({ isModalInitiallyOpen = false, onCloseModal = 
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-xs font-bold uppercase tracking-widest text-slate-500 ml-1">Status da Reserva</label>
+                                <label className="text-[10px] font-black uppercase tracking-widest text-[#64748B] ml-1">Status da Reserva</label>
                                 <select
                                     value={newBooking.status}
                                     onChange={e => setNewBooking({ ...newBooking, status: e.target.value })}
-                                    className="w-full bg-slate-950/50 border border-white/5 rounded-2xl px-5 py-3 focus:ring-2 focus:ring-emerald-500 outline-none text-white transition-all appearance-none cursor-pointer"
+                                    className="w-full bg-[#0B0E14] border border-[#1E293B] rounded-2xl px-5 py-3 focus:border-[#1D4ED8]/50 outline-none text-white transition-all appearance-none cursor-pointer"
                                 >
                                     {Object.entries(statusMap).map(([key, value]) => (
                                         <option key={key} value={key}>{value.label}</option>
@@ -335,23 +347,23 @@ export default function Bookings({ isModalInitiallyOpen = false, onCloseModal = 
                                 </select>
                             </div>
 
-                            <div className="flex items-center justify-between bg-slate-950/50 p-6 rounded-[2rem] border border-white/5 mt-4">
+                            <div className="flex items-center justify-between bg-[#0B0E14] p-6 rounded-[2.5rem] border border-[#1E293B] mt-4 shadow-inner">
                                 <div>
-                                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-1">Valor Total</p>
+                                    <p className="text-[10px] font-bold text-[#64748B] uppercase tracking-[0.2em] mb-1">Valor Total</p>
                                     <div className="flex items-center gap-2">
-                                        <span className="text-emerald-500 font-black text-xl">R$</span>
+                                        <span className="text-[#1D4ED8] font-black text-xl">R$</span>
                                         <input
                                             type="number"
                                             value={newBooking.totalValue}
                                             onChange={e => setNewBooking({ ...newBooking, totalValue: Number(e.target.value) })}
-                                            className="bg-transparent text-4xl font-black w-32 outline-none text-white"
+                                            className="bg-transparent text-4xl font-black w-32 outline-none text-white tracking-tighter"
                                         />
                                     </div>
                                 </div>
                                 <button
                                     type="submit"
                                     disabled={isSubmitting}
-                                    className="bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-800 text-white font-black px-10 py-5 rounded-[1.5rem] shadow-xl shadow-emerald-600/10 active:scale-95 transition-all text-lg flex items-center gap-3"
+                                    className="bg-[#1D4ED8] hover:bg-[#1e40af] disabled:bg-[#1E293B] text-white font-black px-10 py-5 rounded-[1.5rem] shadow-xl shadow-[#1D4ED8]/10 active:scale-95 transition-all text-lg flex items-center gap-3"
                                 >
                                     {isSubmitting ? <Loader2 className="animate-spin" /> : 'CONCLUIR'}
                                 </button>

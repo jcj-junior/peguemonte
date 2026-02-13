@@ -1,10 +1,10 @@
-import { TrendingUp, Users, Calendar, Banknote, ArrowRight, X, Loader2, Package, ChevronRight, Search, Bell, Plus, Truck, Wallet, ClipboardCheck, Printer, AlertTriangle, MessageCircle } from 'lucide-react'
-import { useState, useEffect, useMemo } from 'react'
-import { jsPDF } from 'jspdf'
+import { TrendingUp, Calendar, ArrowRight, Loader2, Package, Search, Bell, Plus, Truck, Wallet, ClipboardCheck, Printer, AlertTriangle, MessageCircle } from 'lucide-react'
+import { useState, useEffect } from 'react'
+// import { jsPDF } from 'jspdf'
 import { bookingService } from '../services/bookingService'
 import { inventoryService } from '../services/inventoryService'
 
-const StatCard = ({ title, value, icon: Icon, trend, color, progress }) => (
+const StatCard = ({ title, value, icon: Icon, trend, progress }) => (
     <div className="bg-[#161B22] p-6 rounded-[2rem] border border-[#1E293B] space-y-4 hover:border-[#1D4ED8]/30 transition-all group shadow-xl">
         <div className="flex justify-between items-start">
             <div className="flex-1">
@@ -124,7 +124,7 @@ export default function Dashboard({ onNavigate = () => { } }) {
     const loadDashboardData = async () => {
         try {
             setLoading(true)
-            const [bookings, items] = await Promise.all([
+            const [bookings] = await Promise.all([
                 bookingService.getAllBookings(),
                 inventoryService.getAllItems()
             ])
