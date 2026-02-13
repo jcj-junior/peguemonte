@@ -4,17 +4,17 @@ import { bookingService } from '../services/bookingService'
 import { inventoryService } from '../services/inventoryService'
 
 const statusMap = {
-    budget: { label: 'Orçamento', color: 'text-amber-500', bg: 'bg-amber-500/10', icon: Clock },
-    confirmed: { label: 'Reservado', color: 'text-[#b6ec13]', bg: 'bg-[#b6ec13]/10', icon: CheckCircle2 },
-    picked_up: { label: 'Retirado', color: 'text-cyan-400', bg: 'bg-cyan-400/10', icon: Package },
-    returned: { label: 'Finalizado', color: 'text-slate-500', bg: 'bg-slate-500/10', icon: CheckCircle2 }
+    budget: { label: 'Orçamento', color: 'text-[#F59E0B]', bg: 'bg-[#F59E0B]/10', icon: Clock },
+    confirmed: { label: 'Reservado', color: 'text-[#10B981]', bg: 'bg-[#10B981]/10', icon: CheckCircle2 },
+    picked_up: { label: 'Retirado', color: 'text-[#1D4ED8]', bg: 'bg-[#1D4ED8]/10', icon: Package },
+    returned: { label: 'Finalizado', color: 'text-[#64748B]', bg: 'bg-[#64748B]/10', icon: CheckCircle2 }
 }
 
 const BookingCard = memo(({ booking, items, statusMap, onEdit, onDelete, onStatusChange }) => {
     const StatusIcon = statusMap[booking.status]?.icon || AlertCircle
 
     return (
-        <div className="bg-slate-800/40 p-5 rounded-2xl glass border border-white/5 hover:border-blue-500/30 transition-all group flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div className="bg-[#161B22] p-6 rounded-[2rem] border border-[#1E293B] hover:border-[#1D4ED8]/30 transition-all group flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shadow-xl">
             <div className="flex gap-4 items-start">
                 <div className={`p-4 rounded-2xl ${statusMap[booking.status]?.bg}`}>
                     <StatusIcon size={24} className={statusMap[booking.status]?.color} />
@@ -46,7 +46,7 @@ const BookingCard = memo(({ booking, items, statusMap, onEdit, onDelete, onStatu
                 <div className="flex gap-2">
                     <button
                         onClick={() => onEdit(booking)}
-                        className="p-2 bg-slate-900/50 rounded-xl text-[#b6ec13] border border-[#b6ec13]/20 hover:bg-[#b6ec13] hover:text-black transition-all"
+                        className="p-2 bg-[#0B0E14] rounded-xl text-[#1D4ED8] border border-[#1D4ED8]/20 hover:bg-[#1D4ED8] hover:text-white transition-all shadow-inner"
                     >
                         <Edit size={16} />
                     </button>

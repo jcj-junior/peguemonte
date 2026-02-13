@@ -3,8 +3,12 @@
 @tailwind utilities;
 
 :root {
-  --background: #080808;
-  --foreground: #e2e8f0;
+  --background: #0B0E14;
+  --foreground: #FFFFFF;
+  --secondary: #94A3B8;
+  --accent: #1D4ED8;
+  --border: #1E293B;
+  --card: #161B22;
 }
 
 body {
@@ -16,10 +20,10 @@ body {
 }
 
 .glass {
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(22, 27, 34, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border);
 }
 
 .card-gradient {

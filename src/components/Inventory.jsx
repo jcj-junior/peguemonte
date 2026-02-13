@@ -4,8 +4,8 @@ import { inventoryService } from '../services/inventoryService'
 
 // Componente de Card memoizado para evitar re-renders desnecessários
 const ItemCard = memo(({ item, onEdit, onDelete }) => (
-    <div className="bg-slate-800/50 rounded-2xl overflow-hidden glass border border-white/10 group flex flex-col h-full hover:border-blue-500/30 transition-all duration-300">
-        <div className="aspect-square bg-slate-800 relative overflow-hidden">
+    <div className="bg-[#161B22] rounded-3xl overflow-hidden border border-[#1E293B] group flex flex-col h-full hover:border-[#1D4ED8]/30 transition-all duration-500 shadow-xl">
+        <div className="aspect-square bg-[#0B0E14] relative overflow-hidden">
             {item.photoURL ? (
                 <img
                     src={item.photoURL}
@@ -21,28 +21,28 @@ const ItemCard = memo(({ item, onEdit, onDelete }) => (
             <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0">
                 <button
                     onClick={() => onEdit(item)}
-                    className="p-2 bg-slate-900/50 rounded-xl text-[#b6ec13] border border-[#b6ec13]/20 hover:bg-[#b6ec13] hover:text-black transition-all"
+                    className="p-2 bg-[#0B0E14]/90 rounded-xl text-[#1D4ED8] border border-[#1D4ED8]/20 hover:bg-[#1D4ED8] hover:text-white transition-all shadow-xl backdrop-blur-md"
                     title="Editar item"
                 >
                     <Edit size={18} />
                 </button>
                 <button
                     onClick={() => onDelete(item.id)}
-                    className="p-2 bg-slate-900/90 rounded-xl text-red-400 hover:bg-red-600 hover:text-white transition-all shadow-xl backdrop-blur-md"
+                    className="p-2 bg-[#0B0E14]/90 rounded-xl text-red-400 hover:bg-red-600 hover:text-white transition-all shadow-xl backdrop-blur-md"
                     title="Excluir item"
                 >
                     <Trash2 size={18} />
                 </button>
             </div>
         </div>
-        <div className="p-4 flex flex-col flex-1">
+        <div className="p-5 flex flex-col flex-1">
             <div className="flex items-start justify-between mb-2">
-                <span className="text-[10px] font-black uppercase tracking-widest text-[#b6ec13] bg-[#b6ec13]/10 px-2 py-1 rounded-lg">
+                <span className="text-[10px] font-black uppercase tracking-widest text-[#1D4ED8] bg-[#1D4ED8]/10 px-2 py-1 rounded-lg">
                     {item.category || 'Sem Categoria'}
                 </span>
             </div>
-            <h3 className="font-bold text-lg text-white group-hover:text-[#b6ec13] transition-colors line-clamp-1">{item.name}</h3>
-            <p className="text-sm text-slate-400 line-clamp-2 mt-2 flex-1 italic">
+            <h3 className="font-black text-lg text-white group-hover:text-[#1D4ED8] transition-colors line-clamp-1">{item.name}</h3>
+            <p className="text-sm text-[#94A3B8] line-clamp-2 mt-2 flex-1 italic font-medium">
                 {item.description || 'Sem descrição detalhada'}
             </p>
         </div>

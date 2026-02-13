@@ -7,11 +7,11 @@ import { LayoutDashboard, Package, Calendar, Settings, Plus, BarChart2, Users } 
 const NavButton = ({ active, onClick, icon: Icon, label }) => (
     <button
         onClick={onClick}
-        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 group relative ${active ? 'bg-white/5 text-[#b6ec13]' : 'text-slate-500 hover:text-slate-300 hover:bg-white/[0.03]'
+        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 group relative ${active ? 'bg-[#1D4ED8]/10 text-[#1D4ED8]' : 'text-[#94A3B8] hover:text-white hover:bg-white/[0.03]'
             }`}
     >
-        {active && <div className="absolute left-0 w-1 h-6 bg-[#b6ec13] rounded-r-lg shadow-[0_0_10px_#b6ec1355]" />}
-        <Icon size={20} className={active ? 'text-[#b6ec13]' : 'group-hover:scale-110 transition-transform'} />
+        {active && <div className="absolute left-0 w-1 h-6 bg-[#1D4ED8] rounded-r-lg shadow-[0_0_12px_#1D4ED8aa]" />}
+        <Icon size={20} className={active ? 'text-[#1D4ED8]' : 'group-hover:scale-110 transition-transform'} />
         <span className="text-sm font-bold tracking-tight">{label}</span>
     </button>
 )
@@ -22,14 +22,14 @@ function App() {
     const [openBookingModal, setOpenBookingModal] = useState(false)
 
     return (
-        <div className="min-h-screen bg-black text-slate-200 flex">
+        <div className="min-h-screen bg-[#0B0E14] text-white flex">
             {/* Sidebar - Desktop */}
-            <nav className="fixed left-0 top-0 hidden h-full w-64 flex-col bg-[#0a0c0a] border-r border-white/5 md:flex z-50">
+            <nav className="fixed left-0 top-0 hidden h-full w-64 flex-col bg-[#0B0E14] border-r border-[#1E293B] shadow-2xl md:flex z-50">
                 <div className="p-8 flex items-center gap-3">
-                    <div className="bg-[#b6ec13] p-2 rounded-lg">
-                        <Package size={24} className="text-black" />
+                    <div className="bg-[#1D4ED8] p-2 rounded-lg shadow-lg shadow-[#1D4ED8]/20">
+                        <Package size={24} className="text-white" />
                     </div>
-                    <span className="text-xl font-black text-white tracking-tighter italic">Pegue<span className="text-[#b6ec13]">e</span>Monte</span>
+                    <span className="text-xl font-black text-white tracking-tighter">Pegue<span className="text-[#1D4ED8]">e</span>Monte</span>
                 </div>
 
                 <div className="flex-1 px-4 py-4 space-y-2">
@@ -40,38 +40,38 @@ function App() {
                     <NavButton active={activeTab === 'clients'} onClick={() => setActiveTab('clients')} icon={Users} label="Clients" />
                 </div>
 
-                <div className="p-6 border-t border-white/5">
+                <div className="p-6 border-t border-[#1E293B]">
                     <div className="flex items-center gap-3 p-2 rounded-2xl hover:bg-white/5 transition-colors cursor-pointer group">
-                        <div className="h-10 w-10 rounded-full bg-slate-800 flex items-center justify-center border border-white/10 overflow-hidden">
-                            <span className="text-xs font-bold">MC</span>
+                        <div className="h-10 w-10 rounded-full bg-[#161B22] flex items-center justify-center border border-[#1E293B] overflow-hidden">
+                            <span className="text-xs font-bold text-[#94A3B8]">MC</span>
                         </div>
                         <div className="flex-1 min-w-0">
                             <p className="text-sm font-bold text-white truncate">Mariana Costa</p>
-                            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Manager</p>
+                            <p className="text-[10px] text-[#94A3B8] font-bold uppercase tracking-wider">Manager</p>
                         </div>
-                        <Settings size={16} className="text-slate-600 group-hover:text-white transition-colors" />
+                        <Settings size={16} className="text-[#64748B] group-hover:text-white transition-colors" />
                     </div>
                 </div>
             </nav>
 
             {/* Bottom Nav - Mobile */}
-            <nav className="fixed bottom-0 left-0 flex w-full justify-around bg-black/80 backdrop-blur-xl py-4 border-t border-white/5 md:hidden z-50">
-                <button onClick={() => setActiveTab('dashboard')} className={activeTab === 'dashboard' ? 'text-[#b6ec13]' : 'text-slate-500'}>
+            <nav className="fixed bottom-0 left-0 flex w-full justify-around bg-[#0B0E14]/90 backdrop-blur-xl py-4 border-t border-[#1E293B] md:hidden z-50">
+                <button onClick={() => setActiveTab('dashboard')} className={activeTab === 'dashboard' ? 'text-[#1D4ED8]' : 'text-[#64748B]'}>
                     <LayoutDashboard size={24} />
                 </button>
-                <button onClick={() => setActiveTab('inventory')} className={activeTab === 'inventory' ? 'text-[#b6ec13]' : 'text-slate-500'}>
+                <button onClick={() => setActiveTab('inventory')} className={activeTab === 'inventory' ? 'text-[#1D4ED8]' : 'text-[#64748B]'}>
                     <Package size={24} />
                 </button>
                 <div
                     onClick={() => { setActiveTab('calendar'); setOpenBookingModal(true); }}
-                    className="relative -top-10 flex h-14 w-14 items-center justify-center rounded-full bg-[#b6ec13] text-black shadow-lg shadow-[#b6ec13]/20 cursor-pointer"
+                    className="relative -top-10 flex h-14 w-14 items-center justify-center rounded-full bg-[#1D4ED8] text-white shadow-lg shadow-[#1D4ED8]/30 cursor-pointer"
                 >
                     <Plus size={28} />
                 </div>
-                <button onClick={() => setActiveTab('calendar')} className={activeTab === 'calendar' ? 'text-[#b6ec13]' : 'text-slate-500'}>
+                <button onClick={() => setActiveTab('calendar')} className={activeTab === 'calendar' ? 'text-[#1D4ED8]' : 'text-[#64748B]'}>
                     <Calendar size={24} />
                 </button>
-                <button onClick={() => setActiveTab('clients')} className={activeTab === 'clients' ? 'text-[#b6ec13]' : 'text-slate-500'}>
+                <button onClick={() => setActiveTab('clients')} className={activeTab === 'clients' ? 'text-[#1D4ED8]' : 'text-[#64748B]'}>
                     <Users size={24} />
                 </button>
             </nav>
