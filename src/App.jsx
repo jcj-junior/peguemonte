@@ -7,10 +7,11 @@ import { LayoutDashboard, Package, Calendar, Settings, Plus, BarChart2, Users } 
 const NavButton = ({ active, onClick, icon: Icon, label }) => (
     <button
         onClick={onClick}
-        className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-300 group ${active ? 'bg-[#b6ec13] text-black shadow-lg shadow-[#b6ec13]/10' : 'text-slate-500 hover:text-white hover:bg-white/5'
+        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 group relative ${active ? 'bg-white/5 text-[#b6ec13]' : 'text-slate-500 hover:text-slate-300 hover:bg-white/[0.03]'
             }`}
     >
-        <Icon size={20} className={active ? 'text-black' : 'group-hover:scale-110 transition-transform'} />
+        {active && <div className="absolute left-0 w-1 h-6 bg-[#b6ec13] rounded-r-lg shadow-[0_0_10px_#b6ec1355]" />}
+        <Icon size={20} className={active ? 'text-[#b6ec13]' : 'group-hover:scale-110 transition-transform'} />
         <span className="text-sm font-bold tracking-tight">{label}</span>
     </button>
 )

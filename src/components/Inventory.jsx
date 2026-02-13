@@ -21,7 +21,7 @@ const ItemCard = memo(({ item, onEdit, onDelete }) => (
             <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0">
                 <button
                     onClick={() => onEdit(item)}
-                    className="p-2 bg-slate-900/90 rounded-xl text-[#b6ec13] hover:bg-[#b6ec13] hover:text-black transition-all shadow-xl backdrop-blur-md"
+                    className="p-2 bg-slate-900/50 rounded-xl text-[#b6ec13] border border-[#b6ec13]/20 hover:bg-[#b6ec13] hover:text-black transition-all"
                     title="Editar item"
                 >
                     <Edit size={18} />

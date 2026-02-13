@@ -3,14 +3,16 @@
 @tailwind utilities;
 
 :root {
-  --background: #0f172a;
-  --foreground: #f8fafc;
+  --background: #080808;
+  --foreground: #e2e8f0;
 }
 
 body {
   background-color: var(--background);
   color: var(--foreground);
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 .glass {

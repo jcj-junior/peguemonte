@@ -46,7 +46,7 @@ const BookingCard = memo(({ booking, items, statusMap, onEdit, onDelete, onStatu
                 <div className="flex gap-2">
                     <button
                         onClick={() => onEdit(booking)}
-                        className="p-2 bg-slate-900/50 rounded-xl text-[#b6ec13] hover:bg-[#b6ec13] hover:text-black transition-all border border-white/5"
+                        className="p-2 bg-slate-900/50 rounded-xl text-[#b6ec13] border border-[#b6ec13]/20 hover:bg-[#b6ec13] hover:text-black transition-all"
                     >
                         <Edit size={16} />
                     </button>

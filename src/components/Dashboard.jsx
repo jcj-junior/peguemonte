@@ -11,7 +11,7 @@ const StatCard = ({ title, value, icon: Icon, trend, color, progress }) => (
                 <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-1">{title}</p>
                 <p className="text-3xl font-black text-white tracking-tighter">{value}</p>
             </div>
-            <div className={`p-3 rounded-2xl bg-white/5 text-[#b6ec13] group-hover:bg-[#b6ec13] group-hover:text-black transition-all`}>
+            <div className={`p-3 rounded-2xl bg-[#b6ec13]/10 text-[#b6ec13] group-hover:bg-[#b6ec13] group-hover:text-black transition-all`}>
                 <Icon size={20} />
             </div>
         </div>
@@ -81,11 +81,11 @@ const LogItem = ({ item, client, phone, time, status, type }) => {
             </div>
             <div className="col-span-1 flex justify-end">
                 {status === 'ready' ? (
-                    <button className="bg-[#b6ec13] text-black text-[10px] font-black px-3 py-1.5 rounded-lg active:scale-95 transition-all">
+                    <button className="bg-[#b6ec13]/10 text-[#b6ec13] border border-[#b6ec13]/20 text-[10px] font-black px-4 py-2 rounded-xl active:scale-95 hover:bg-[#b6ec13] hover:text-black transition-all">
                         Mark Done
                     </button>
                 ) : (
-                    <ArrowRight size={18} className="text-slate-700 cursor-pointer hover:text-white transition-colors" />
+                    <ArrowRight size={18} className="text-slate-700 cursor-pointer hover:text-[#b6ec13] transition-colors" />
                 )}
             </div>
         </div>
@@ -190,7 +190,7 @@ export default function Dashboard({ onNavigate = () => { } }) {
                     </button>
                     <button
                         onClick={() => onNavigate('calendar', true)}
-                        className="px-6 py-3 bg-[#b6ec13] text-black font-black text-sm rounded-2xl hover:bg-[#c4f526] active:scale-95 transition-all flex items-center gap-2"
+                        className="px-6 py-3 bg-[#b6ec13]/10 border border-[#b6ec13]/20 text-[#b6ec13] font-black text-sm rounded-2xl hover:bg-[#b6ec13] hover:text-black active:scale-95 transition-all flex items-center gap-2"
                     >
                         <Plus size={18} /> New Order
                     </button>
@@ -213,16 +213,16 @@ export default function Dashboard({ onNavigate = () => { } }) {
                         </div>
                         <h2 className="text-xl font-black text-white tracking-tight">Today's Log</h2>
                     </div>
-                    <div className="bg-black p-1 rounded-2xl flex border border-white/5">
+                    <div className="bg-black/40 p-1.5 rounded-2xl flex border border-white/5">
                         <button
                             onClick={() => setActiveTab('pickups')}
-                            className={`px-6 py-2.5 rounded-xl text-xs font-black transition-all ${activeTab === 'pickups' ? 'bg-[#b6ec13] text-black shadow-lg shadow-[#b6ec13]/20' : 'text-slate-500 hover:text-slate-300'}`}
+                            className={`px-6 py-2 rounded-xl text-xs font-black transition-all ${activeTab === 'pickups' ? 'bg-white/10 text-[#b6ec13] shadow-inner' : 'text-slate-500 hover:text-slate-300'}`}
                         >
                             Pickups (12)
                         </button>
                         <button
                             onClick={() => setActiveTab('returns')}
-                            className={`px-6 py-2.5 rounded-xl text-xs font-black transition-all ${activeTab === 'returns' ? 'bg-[#b6ec13] text-black shadow-lg shadow-[#b6ec13]/20' : 'text-slate-500 hover:text-slate-300'}`}
+                            className={`px-6 py-2 rounded-xl text-xs font-black transition-all ${activeTab === 'returns' ? 'bg-white/10 text-[#b6ec13] shadow-inner' : 'text-slate-500 hover:text-slate-300'}`}
                         >
                             Returns (8)
                         </button>
