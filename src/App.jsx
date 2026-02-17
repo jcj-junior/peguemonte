@@ -2,7 +2,8 @@ import { useState } from 'react'
 import Dashboard from './components/Dashboard'
 import Inventory from './components/Inventory'
 import Bookings from './components/Bookings'
-import { LayoutDashboard, Package, Calendar, Settings, Plus, BarChart2, Users } from 'lucide-react'
+import { LayoutDashboard, Package, Calendar, Settings, Plus, BarChart2, Users, Tag } from 'lucide-react'
+import Categories from './components/Categories'
 
 const NavButton = ({ active, onClick, icon: Icon, label }) => (
     <button
@@ -35,6 +36,7 @@ function App() {
                 <div className="flex-1 px-4 py-4 space-y-2">
                     <NavButton active={activeTab === 'dashboard'} onClick={() => setActiveTab('dashboard')} icon={LayoutDashboard} label="Painel" />
                     <NavButton active={activeTab === 'inventory'} onClick={() => setActiveTab('inventory')} icon={Package} label="Estoque" />
+                    <NavButton active={activeTab === 'categories'} onClick={() => setActiveTab('categories')} icon={Tag} label="Categorias" />
                     <NavButton active={activeTab === 'calendar'} onClick={() => setActiveTab('calendar')} icon={Calendar} label="Agenda" />
                     <NavButton active={activeTab === 'analytics'} onClick={() => setActiveTab('analytics')} icon={BarChart2} label="Relatórios" />
                     <NavButton active={activeTab === 'clients'} onClick={() => setActiveTab('clients')} icon={Users} label="Clientes" />
@@ -71,8 +73,8 @@ function App() {
                 <button onClick={() => setActiveTab('calendar')} className={activeTab === 'calendar' ? 'text-[#1D4ED8]' : 'text-[#64748B]'}>
                     <Calendar size={24} />
                 </button>
-                <button onClick={() => setActiveTab('clients')} className={activeTab === 'clients' ? 'text-[#1D4ED8]' : 'text-[#64748B]'}>
-                    <Users size={24} />
+                <button onClick={() => setActiveTab('categories')} className={activeTab === 'categories' ? 'text-[#1D4ED8]' : 'text-[#64748B]'}>
+                    <Tag size={24} />
                 </button>
             </nav>
 
@@ -92,6 +94,9 @@ function App() {
                         onCloseModal={() => setOpenInventoryModal(false)}
                     />
                 )}
+                {activeTab === 'categories' && (
+                    <Categories />
+                )}
                 {activeTab === 'calendar' && (
                     <Bookings
                         isModalInitiallyOpen={openBookingModal}
@@ -99,6 +104,7 @@ function App() {
                     />
                 )}
             </main>
+
         </div>
     )
 }

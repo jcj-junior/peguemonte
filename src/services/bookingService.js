@@ -18,6 +18,7 @@ export const bookingService = {
                 endDate: b.end_date,
                 totalValue: b.total_value,
                 status: b.status,
+                category: b.category,
                 createdAt: b.created_at
             }));
         } catch (error) {
@@ -34,7 +35,8 @@ export const bookingService = {
                 start_date: booking.startDate,
                 end_date: booking.endDate,
                 total_value: booking.totalValue,
-                status: "budget"
+                status: "budget",
+                category: booking.category
             };
 
             const { data, error } = await supabase
@@ -60,6 +62,7 @@ export const bookingService = {
             if (updates.endDate) payload.end_date = updates.endDate;
             if (updates.totalValue) payload.total_value = updates.totalValue;
             if (updates.status) payload.status = updates.status;
+            if (updates.category) payload.category = updates.category;
 
             const { data, error } = await supabase
                 .from('bookings')

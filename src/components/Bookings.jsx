@@ -17,6 +17,7 @@ import {
 } from 'lucide-react'
 import { bookingService } from '../services/bookingService'
 import { inventoryService } from '../services/inventoryService'
+import { categoryService } from '../services/categoryService'
 
 const statusMap = {
     budget: { label: 'Orçamento', color: 'text-[#F59E0B]', bg: 'bg-[#F59E0B]/10', icon: Clock },
@@ -146,6 +147,11 @@ const BookingCard = memo(({ booking, statusMap, onEdit, onDelete }) => {
                             <Phone size={14} className="text-emerald-500" />
                             {booking.customer.phone || 'Sem contato'}
                         </p>
+                        {booking.category && (
+                            <p className="text-[10px] font-black uppercase tracking-widest text-[#1D4ED8] bg-[#1D4ED8]/10 px-2 py-1 rounded-lg self-start">
+                                {booking.category}
+                            </p>
+                        )}
                     </div>
                 </div>
             </div>
@@ -181,11 +187,22 @@ BookingCard.displayName = 'BookingCard'
 export default function Bookings({ isModalInitiallyOpen = false, onCloseModal = () => { } }) {
     const [bookings, setBookings] = useState([])
     const [items, setItems] = useState([])
+    const [categories, setCategories] = useState([])
     const [isModalOpen, setIsModalOpen] = useState(isModalInitiallyOpen)
     const [loading, setLoading] = useState(true)
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [editingBooking, setEditingBooking] = useState(null)
     const [searchTerm, setSearchTerm] = useState('')
+
+    // Função para aplicar máscara de telefone (DD) 00000-0000
+    const formatPhone = (value) => {
+        if (!value) return value;
+        const phone = value.replace(/\D/g, '');
+        if (phone.length <= 2) return `(${phone}`;
+        if (phone.length <= 6) return `(${phone.slice(0, 2)}) ${phone.slice(2)}`;
+        if (phone.length <= 10) return `(${phone.slice(0, 2)}) ${phone.slice(2, 6)}-${phone.slice(6)}`;
+        return `(${phone.slice(0, 2)}) ${phone.slice(2, 7)}-${phone.slice(7, 11)}`;
+    };
 
     const [newBooking, setNewBooking] = useState({
         customer: { name: '', phone: '' },
@@ -193,8 +210,22 @@ export default function Bookings({ isModalInitiallyOpen = false, onCloseModal = 
         startDate: '',
         endDate: '',
         totalValue: 0,
-        status: 'budget'
+        status: 'budget',
+        category: ''
     })
+
+    // Efeito para somatizar valores dos itens selecionados
+    useEffect(() => {
+        if (newBooking.items.length > 0 && items.length > 0) {
+            const sum = newBooking.items.reduce((acc, itemId) => {
+                const item = items.find(i => i.id === itemId);
+                return acc + (Number(item?.price) || 0);
+            }, 0);
+            setNewBooking(prev => ({ ...prev, totalValue: sum }));
+        } else if (newBooking.items.length === 0 && !editingBooking) {
+            setNewBooking(prev => ({ ...prev, totalValue: 0 }));
+        }
+    }, [newBooking.items, items, editingBooking]);
 
     useEffect(() => {
         setIsModalOpen(isModalInitiallyOpen)
@@ -207,12 +238,14 @@ export default function Bookings({ isModalInitiallyOpen = false, onCloseModal = 
     async function loadData() {
         try {
             setLoading(true)
-            const [bookingsData, itemsData] = await Promise.all([
+            const [bookingsData, itemsData, categoriesData] = await Promise.all([
                 bookingService.getAllBookings(),
-                inventoryService.getAllItems()
+                inventoryService.getAllItems(),
+                categoryService.getAllCategories()
             ])
             setBookings(bookingsData)
             setItems(itemsData)
+            setCategories(categoriesData)
         } catch (error) {
             console.error("Erro ao carregar dados", error)
         } finally {
@@ -236,7 +269,8 @@ export default function Bookings({ isModalInitiallyOpen = false, onCloseModal = 
             startDate: '',
             endDate: '',
             totalValue: 0,
-            status: 'budget'
+            status: 'budget',
+            category: ''
         })
         onCloseModal()
     }
@@ -249,7 +283,8 @@ export default function Bookings({ isModalInitiallyOpen = false, onCloseModal = 
             startDate: booking.startDate,
             endDate: booking.endDate,
             totalValue: booking.totalValue,
-            status: booking.status
+            status: booking.status,
+            category: booking.category || ''
         })
         setIsModalOpen(true)
     }
@@ -400,7 +435,13 @@ export default function Bookings({ isModalInitiallyOpen = false, onCloseModal = 
                                 </div>
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-black uppercase tracking-widest text-[#64748B] ml-1">WhatsApp / Telefone</label>
-                                    <input value={newBooking.customer.phone} onChange={e => setNewBooking({ ...newBooking, customer: { ...newBooking.customer, phone: e.target.value } })} className="w-full bg-[#0B0E14] border border-[#1E293B] rounded-2xl px-5 py-3 focus:border-[#1D4ED8]/50 outline-none text-white transition-all shadow-inner font-bold" placeholder="(00) 00000-0000" />
+                                    <input
+                                        value={newBooking.customer.phone}
+                                        onChange={e => setNewBooking({ ...newBooking, customer: { ...newBooking.customer, phone: formatPhone(e.target.value) } })}
+                                        className="w-full bg-[#0B0E14] border border-[#1E293B] rounded-2xl px-5 py-3 focus:border-[#1D4ED8]/50 outline-none text-white transition-all shadow-inner font-bold"
+                                        placeholder="(00) 00000-0000"
+                                        maxLength={15}
+                                    />
                                 </div>
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-black uppercase tracking-widest text-[#64748B] ml-1">Início (Retirada)</label>
@@ -428,6 +469,23 @@ export default function Bookings({ isModalInitiallyOpen = false, onCloseModal = 
                                     >
                                         {Object.entries(statusMap).map(([key, value]) => (
                                             <option key={key} value={key}>{value.label}</option>
+                                        ))}
+                                    </select>
+                                    <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 text-[#64748B] pointer-events-none" size={18} />
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-[#64748B] ml-1">Categoria do Evento</label>
+                                <div className="relative">
+                                    <select
+                                        value={newBooking.category}
+                                        onChange={e => setNewBooking({ ...newBooking, category: e.target.value })}
+                                        className="w-full bg-[#0B0E14] border border-[#1E293B] rounded-2xl px-5 py-3 focus:border-[#1D4ED8]/50 outline-none text-white transition-all appearance-none cursor-pointer font-bold"
+                                    >
+                                        <option value="">Selecione...</option>
+                                        {categories.map(cat => (
+                                            <option key={cat.id} value={cat.name}>{cat.name}</option>
                                         ))}
                                     </select>
                                     <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 text-[#64748B] pointer-events-none" size={18} />

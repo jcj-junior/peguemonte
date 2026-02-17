@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, memo } from 'react'
 import { Plus, Search, Trash2, Edit, Package, X, Loader2, Hash, DollarSign } from 'lucide-react'
 import { inventoryService } from '../services/inventoryService'
+import { categoryService } from '../services/categoryService'
 
 // Helper para gerar código randômico
 const generateSKU = () => {
@@ -65,6 +66,7 @@ ItemCard.displayName = 'ItemCard'
 
 export default function Inventory({ isModalInitiallyOpen = false, onCloseModal = () => { } }) {
     const [items, setItems] = useState([])
+    const [categories, setCategories] = useState([])
     const [searchTerm, setSearchTerm] = useState('')
     const [isModalOpen, setIsModalOpen] = useState(isModalInitiallyOpen)
     const [loading, setLoading] = useState(true)
@@ -80,6 +82,21 @@ export default function Inventory({ isModalInitiallyOpen = false, onCloseModal =
         quantity: 1
     })
 
+    // Funções para máscara de moeda BRL
+    const formatCurrency = (value) => {
+        if (!value) return '';
+        const number = value.replace(/\D/g, '');
+        const options = { minimumFractionDigits: 2 };
+        const result = new Intl.NumberFormat('pt-BR', options).format(
+            parseFloat(number) / 100
+        );
+        return result;
+    };
+
+    const parseCurrency = (value) => {
+        return value.replace(/\D/g, '') / 100;
+    };
+
     useEffect(() => {
         if (isModalInitiallyOpen && !isModalOpen) {
             handleOpenModal()
@@ -87,20 +104,25 @@ export default function Inventory({ isModalInitiallyOpen = false, onCloseModal =
     }, [isModalInitiallyOpen, isModalOpen])
 
     useEffect(() => {
-        loadItems()
+        loadData()
     }, [])
 
-    const loadItems = async () => {
+    const loadData = async () => {
         try {
             setLoading(true)
-            const data = await inventoryService.getAllItems()
-            setItems(data)
+            const [itemsData, categoriesData] = await Promise.all([
+                inventoryService.getAllItems(),
+                categoryService.getAllCategories()
+            ])
+            setItems(itemsData)
+            setCategories(categoriesData)
         } catch (error) {
-            console.error("Erro ao carregar itens:", error)
+            console.error("Erro ao carregar dados:", error)
         } finally {
             setLoading(false)
         }
     }
+
 
     const filteredItems = useMemo(() => {
         return items.filter(item =>
@@ -156,7 +178,7 @@ export default function Inventory({ isModalInitiallyOpen = false, onCloseModal =
         if (window.confirm("🗑️ Deseja realmente excluir este item do inventário?")) {
             try {
                 await inventoryService.deleteItem(id)
-                loadItems()
+                loadData()
             } catch (error) {
                 alert("Erro ao excluir item. Tente novamente.")
             }
@@ -182,7 +204,7 @@ export default function Inventory({ isModalInitiallyOpen = false, onCloseModal =
             }
 
             handleClose()
-            await loadItems()
+            await loadData()
 
             setTimeout(() => {
                 alert(editingItem ? "✨ Item atualizado com sucesso!" : "✅ Item cadastrado com sucesso!")
@@ -297,11 +319,10 @@ export default function Inventory({ isModalInitiallyOpen = false, onCloseModal =
                                     <div className="relative">
                                         <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 text-[#64748B]" size={16} />
                                         <input
-                                            type="number"
-                                            step="0.01"
+                                            type="text"
                                             required
-                                            value={newItem.price}
-                                            onChange={e => setNewItem({ ...newItem, price: e.target.value })}
+                                            value={formatCurrency(String(newItem.price * 100 || ''))}
+                                            onChange={e => setNewItem({ ...newItem, price: parseCurrency(e.target.value) })}
                                             className="w-full bg-[#0B0E14] border border-[#1E293B] rounded-2xl pl-12 pr-6 py-3 focus:border-[#1D4ED8]/50 outline-none text-white transition-all shadow-inner font-bold"
                                             placeholder="0,00"
                                         />
@@ -319,11 +340,9 @@ export default function Inventory({ isModalInitiallyOpen = false, onCloseModal =
                                         className="w-full bg-[#0B0E14] border border-[#1E293B] rounded-2xl px-5 py-3 focus:border-[#1D4ED8]/50 outline-none text-white transition-all appearance-none cursor-pointer font-bold"
                                     >
                                         <option value="">Selecione...</option>
-                                        <option value="Moveis">Móveis</option>
-                                        <option value="Temas">Temas/Painéis</option>
-                                        <option value="Vasilhames">Vasilhames</option>
-                                        <option value="Eletronicos">Eletrônicos</option>
-                                        <option value="Kits">Kits Completos</option>
+                                        {categories.map(cat => (
+                                            <option key={cat.id} value={cat.name}>{cat.name}</option>
+                                        ))}
                                     </select>
                                 </div>
                                 <div className="space-y-2">
