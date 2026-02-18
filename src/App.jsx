@@ -6,6 +6,9 @@ import { LayoutDashboard, Package, Calendar, Settings, Plus, BarChart2, Users, T
 import Categories from './components/Categories'
 import Reports from './components/Reports'
 import Clients from './components/Clients'
+import Login from './components/Login'
+import { supabase } from './supabase'
+import { useEffect } from 'react'
 
 const NavButton = ({ active, onClick, icon: Icon, label }) => (
     <button
@@ -19,11 +22,43 @@ const NavButton = ({ active, onClick, icon: Icon, label }) => (
     </button>
 )
 
-
 function App() {
+    const [user, setUser] = useState(null)
+    const [initializing, setInitializing] = useState(true)
     const [activeTab, setActiveTab] = useState('dashboard')
     const [openInventoryModal, setOpenInventoryModal] = useState(false)
     const [openBookingModal, setOpenBookingModal] = useState(false)
+
+    useEffect(() => {
+        // Verificar sessão atual
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            setUser(session?.user ?? null)
+            setInitializing(false)
+        })
+
+        // Escutar mudanças na autenticação
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+            setUser(session?.user ?? null)
+        })
+
+        return () => subscription.unsubscribe()
+    }, [])
+
+    const handleLogout = async () => {
+        await supabase.auth.signOut()
+    }
+
+    if (initializing) {
+        return (
+            <div className="min-h-screen bg-[#0B0E14] flex items-center justify-center">
+                <Loader2 className="animate-spin text-[#1D4ED8]" size={48} />
+            </div>
+        )
+    }
+
+    if (!user) {
+        return <Login onLogin={setUser} />
+    }
 
     return (
         <div className="min-h-screen bg-[#0B0E14] text-white flex">
@@ -46,13 +81,16 @@ function App() {
                 </div>
 
                 <div className="p-6 border-t border-[#1E293B]">
-                    <div className="flex items-center gap-3 p-2 rounded-2xl hover:bg-white/5 transition-colors cursor-pointer group">
-                        <div className="h-10 w-10 rounded-full bg-[#161B22] flex items-center justify-center border border-[#1E293B] overflow-hidden">
-                            <span className="text-xs font-bold text-[#94A3B8]">MC</span>
+                    <div
+                        onClick={handleLogout}
+                        className="flex items-center gap-3 p-2 rounded-2xl hover:bg-red-500/5 transition-colors cursor-pointer group"
+                    >
+                        <div className="h-10 w-10 rounded-full bg-[#161B22] flex items-center justify-center border border-[#1E293B] overflow-hidden group-hover:border-red-500/20">
+                            <span className="text-xs font-bold text-[#94A3B8]">{user.email?.substring(0, 2).toUpperCase()}</span>
                         </div>
                         <div className="flex-1 min-w-0">
-                            <p className="text-sm font-bold text-white truncate">Mariana Costa</p>
-                            <p className="text-[10px] text-[#94A3B8] font-bold uppercase tracking-wider">Gerente</p>
+                            <p className="text-sm font-bold text-white truncate">{user.email?.split('@')[0]}</p>
+                            <p className="text-[10px] text-[#94A3B8] font-bold uppercase tracking-wider group-hover:text-red-500 transition-colors cursor-pointer">Sair do Sistema</p>
                         </div>
                         <Settings size={16} className="text-[#64748B] group-hover:text-white transition-colors" />
                     </div>
@@ -113,7 +151,6 @@ function App() {
                     <Clients />
                 )}
             </main>
-
         </div>
     )
 }
