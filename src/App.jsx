@@ -78,7 +78,7 @@ function App() {
                 </button>
             </nav>
 
-            <main className="flex-1 md:ml-64 p-4 md:p-10 min-h-screen">
+            <main className="flex-1 md:ml-64 p-4 md:p-10 h-screen flex flex-col overflow-hidden">
                 {activeTab === 'dashboard' && (
                     <Dashboard
                         onNavigate={(tab, openModal) => {

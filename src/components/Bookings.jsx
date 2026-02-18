@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, memo } from 'react'
+import { useState, useEffect, useMemo, memo, useRef } from 'react'
 import {
     Edit,
     Trash2,
@@ -13,17 +13,42 @@ import {
     Loader2,
     Phone,
     ChevronDown,
-    Check
+    Check,
+    ChevronLeft,
+    ChevronRight,
+    MoreVertical
 } from 'lucide-react'
+import {
+    format,
+    addDays,
+    startOfWeek,
+    endOfWeek,
+    eachDayOfInterval,
+    isSameDay,
+    isSameMonth,
+    startOfMonth,
+    endOfMonth,
+    addMonths,
+    subMonths,
+    startOfDay,
+    parseISO,
+    isWithinInterval,
+    getHours,
+    getMinutes,
+    setHours,
+    setMinutes,
+    differenceInHours
+} from 'date-fns'
+import { ptBR } from 'date-fns/locale'
 import { bookingService } from '../services/bookingService'
 import { inventoryService } from '../services/inventoryService'
 import { categoryService } from '../services/categoryService'
 
 const statusMap = {
-    budget: { label: 'Orçamento', color: 'text-[#F59E0B]', bg: 'bg-[#F59E0B]/10', icon: Clock },
-    confirmed: { label: 'Reservado', color: 'text-[#10B981]', bg: 'bg-[#10B981]/10', icon: CheckCircle2 },
-    picked_up: { label: 'Retirado', color: 'text-[#1D4ED8]', bg: 'bg-[#1D4ED8]/10', icon: Package },
-    returned: { label: 'Finalizado', color: 'text-[#64748B]', bg: 'bg-[#64748B]/10', icon: CheckCircle2 }
+    budget: { label: 'Orçamento', color: 'text-[#F59E0B]', bg: 'bg-[#F59E0B]/10', border: 'border-[#F59E0B]/30', icon: Clock },
+    confirmed: { label: 'Reservado', color: 'text-[#10B981]', bg: 'bg-[#10B981]/10', border: 'border-[#10B981]/30', icon: CheckCircle2 },
+    picked_up: { label: 'Retirado', color: 'text-[#1D4ED8]', bg: 'bg-[#1D4ED8]/10', border: 'border-[#1D4ED8]/30', icon: Package },
+    returned: { label: 'Finalizado', color: 'text-[#64748B]', bg: 'bg-[#64748B]/10', border: 'border-[#64748B]/30', icon: CheckCircle2 }
 }
 
 const ItemSelector = ({ items, selectedIds, onToggle }) => {
@@ -71,7 +96,7 @@ const ItemSelector = ({ items, selectedIds, onToggle }) => {
             {isOpen && (
                 <>
                     <div className="fixed inset-0 z-10" onClick={() => setIsOpen(false)} />
-                    <div className="absolute z-20 top-full mt-2 w-full bg-[#161B22] border border-[#1E293B] rounded-2xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200 backdrop-blur-xl">
+                    <div className="absolute z-[110] top-full mt-2 w-full bg-[#161B22] border border-[#1E293B] rounded-2xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200 backdrop-blur-xl">
                         <div className="p-4 border-b border-[#1E293B]">
                             <div className="relative">
                                 <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#64748B]" />
@@ -125,64 +150,54 @@ const ItemSelector = ({ items, selectedIds, onToggle }) => {
     )
 }
 
-const BookingCard = memo(({ booking, statusMap, onEdit, onDelete }) => {
-    const StatusIcon = statusMap[booking.status]?.icon || AlertCircle
+const MiniCalendar = ({ currentMonth, selectedDate, onDateClick, onPrevMonth, onNextMonth }) => {
+    const daysInMonth = eachDayOfInterval({
+        start: startOfWeek(startOfMonth(currentMonth)),
+        end: endOfWeek(endOfMonth(currentMonth))
+    });
 
     return (
-        <div className="bg-[#161B22] p-6 rounded-[2rem] border border-[#1E293B] hover:border-[#1D4ED8]/30 transition-all group flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shadow-xl">
-            <div className="flex gap-4 items-start">
-                <div className={`p-4 rounded-2xl ${statusMap[booking.status]?.bg}`}>
-                    <StatusIcon size={24} className={statusMap[booking.status]?.color} />
-                </div>
-                <div>
-                    <h3 className="font-bold text-lg text-slate-100 group-hover:text-blue-400 transition-colors">
-                        {booking.customer.name}
-                    </h3>
-                    <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1">
-                        <p className="text-sm text-slate-400 flex items-center gap-1.5">
-                            <CalendarIcon size={14} className="text-blue-500" />
-                            {new Date(booking.startDate).toLocaleDateString('pt-BR')} — {new Date(booking.endDate).toLocaleDateString('pt-BR')}
-                        </p>
-                        <p className="text-sm text-slate-400 flex items-center gap-1.5">
-                            <Phone size={14} className="text-emerald-500" />
-                            {booking.customer.phone || 'Sem contato'}
-                        </p>
-                        {booking.category && (
-                            <p className="text-[10px] font-black uppercase tracking-widest text-[#1D4ED8] bg-[#1D4ED8]/10 px-2 py-1 rounded-lg self-start">
-                                {booking.category}
-                            </p>
-                        )}
-                    </div>
+        <div className="p-4 bg-[#161B22]/50 rounded-3xl border border-[#1E293B]">
+            <div className="flex items-center justify-between mb-4">
+                <span className="text-sm font-black uppercase tracking-widest text-[#94A3B8]">
+                    {format(currentMonth, 'MMMM yyyy', { locale: ptBR })}
+                </span>
+                <div className="flex gap-1">
+                    <button onClick={onPrevMonth} className="p-1 hover:bg-white/5 rounded-lg text-[#64748B] hover:text-white transition-all"><ChevronLeft size={18} /></button>
+                    <button onClick={onNextMonth} className="p-1 hover:bg-white/5 rounded-lg text-[#64748B] hover:text-white transition-all"><ChevronRight size={18} /></button>
                 </div>
             </div>
+            <div className="grid grid-cols-7 gap-1 text-center mb-2">
+                {['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map(d => (
+                    <span key={d} className="text-[10px] font-black text-[#64748B] py-1">{d}</span>
+                ))}
+            </div>
+            <div className="grid grid-cols-7 gap-1">
+                {daysInMonth.map((day, i) => {
+                    const isSelected = isSameDay(day, selectedDate);
+                    const isToday = isSameDay(day, new Date());
+                    const isCurrMonth = isSameMonth(day, currentMonth);
 
-            <div className="flex flex-row md:flex-col items-center md:items-end justify-between w-full md:w-auto gap-2">
-                <div className="text-left md:text-right">
-                    <p className="font-black text-xl text-white">R$ {Number(booking.totalValue).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
-                    <span className={`text-[10px] font-black uppercase tracking-widest ${statusMap[booking.status]?.color}`}>
-                        {statusMap[booking.status]?.label}
-                    </span>
-                </div>
-                <div className="flex gap-2">
-                    <button
-                        onClick={() => onEdit(booking)}
-                        className="p-2 bg-[#0B0E14] rounded-xl text-[#1D4ED8] border border-[#1D4ED8]/20 hover:bg-[#1D4ED8] hover:text-white transition-all shadow-inner"
-                    >
-                        <Edit size={16} />
-                    </button>
-                    <button
-                        onClick={() => onDelete(booking.id)}
-                        className="p-2 bg-slate-900/50 rounded-xl text-red-400 hover:bg-red-600 hover:text-white transition-all border border-white/5"
-                    >
-                        <Trash2 size={16} />
-                    </button>
-                </div>
+                    return (
+                        <button
+                            key={i}
+                            onClick={() => onDateClick(day)}
+                            className={`
+                                aspect-square text-[11px] font-bold rounded-lg flex items-center justify-center transition-all
+                                ${isSelected ? 'bg-[#1D4ED8] text-white shadow-lg shadow-[#1D4ED8]/20' : ''}
+                                ${!isSelected && isToday ? 'text-[#1D4ED8] bg-[#1D4ED8]/10' : ''}
+                                ${!isSelected && !isToday && isCurrMonth ? 'text-[#94A3B8] hover:bg-white/5 hover:text-white' : ''}
+                                ${!isCurrMonth ? 'text-[#334155] opacity-30 hover:bg-white/5' : ''}
+                            `}
+                        >
+                            {format(day, 'd')}
+                        </button>
+                    );
+                })}
             </div>
         </div>
-    )
-})
-
-BookingCard.displayName = 'BookingCard'
+    );
+};
 
 export default function Bookings({ isModalInitiallyOpen = false, onCloseModal = () => { } }) {
     const [bookings, setBookings] = useState([])
@@ -193,6 +208,20 @@ export default function Bookings({ isModalInitiallyOpen = false, onCloseModal = 
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [editingBooking, setEditingBooking] = useState(null)
     const [searchTerm, setSearchTerm] = useState('')
+
+    // Calendário State
+    const [viewDate, setViewDate] = useState(new Date())
+    const [currentMonth, setCurrentMonth] = useState(new Date())
+    const scrollRef = useRef(null)
+
+    // Horários para o grid (Horário Comercial: 08:00 às 18:00)
+    const hours = Array.from({ length: 11 }, (_, i) => i + 8)
+
+    // Datas da semana atual
+    const weekDays = useMemo(() => {
+        const start = startOfWeek(viewDate, { weekStartsOn: 0 })
+        return eachDayOfInterval({ start, end: addDays(start, 6) })
+    }, [viewDate])
 
     // Função para aplicar máscara de telefone (DD) 00000-0000
     const formatPhone = (value) => {
@@ -208,7 +237,9 @@ export default function Bookings({ isModalInitiallyOpen = false, onCloseModal = 
         customer: { name: '', phone: '' },
         items: [],
         startDate: '',
+        startTime: '08:00',
         endDate: '',
+        endTime: '18:00',
         totalValue: 0,
         status: 'budget',
         category: ''
@@ -253,13 +284,6 @@ export default function Bookings({ isModalInitiallyOpen = false, onCloseModal = 
         }
     }
 
-    const filteredBookings = useMemo(() => {
-        return bookings.filter(b =>
-            b.customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            b.customer.phone?.includes(searchTerm)
-        )
-    }, [bookings, searchTerm])
-
     const handleClose = () => {
         setIsModalOpen(false)
         setEditingBooking(null)
@@ -267,7 +291,9 @@ export default function Bookings({ isModalInitiallyOpen = false, onCloseModal = 
             customer: { name: '', phone: '' },
             items: [],
             startDate: '',
+            startTime: '08:00',
             endDate: '',
+            endTime: '18:00',
             totalValue: 0,
             status: 'budget',
             category: ''
@@ -276,12 +302,24 @@ export default function Bookings({ isModalInitiallyOpen = false, onCloseModal = 
     }
 
     const handleEdit = (booking) => {
+        // Garantir que a data seja analisada corretamente mesmo se vier com espaço do banco
+        const parseDateTime = (str) => {
+            if (!str) return new Date()
+            const isoStr = str.replace(' ', 'T')
+            return parseISO(isoStr)
+        }
+
+        const start = parseDateTime(booking.startDate)
+        const end = parseDateTime(booking.endDate)
+
         setEditingBooking(booking)
         setNewBooking({
             customer: { ...booking.customer },
             items: [...booking.items],
-            startDate: booking.startDate,
-            endDate: booking.endDate,
+            startDate: format(start, 'yyyy-MM-dd'),
+            startTime: format(start, 'HH:mm'),
+            endDate: format(end, 'yyyy-MM-dd'),
+            endTime: format(end, 'HH:mm'),
             totalValue: booking.totalValue,
             status: booking.status,
             category: booking.category || ''
@@ -306,13 +344,44 @@ export default function Bookings({ isModalInitiallyOpen = false, onCloseModal = 
 
         setIsSubmitting(true)
         try {
+            // Construir objetos Date baseados nos inputs locais (Data e Hora)
+            // Isso garante que o fuso horário do navegador seja considerado corretamente
+            const parseDate = (dateStr, timeStr) => {
+                const [year, month, day] = dateStr.split('-').map(Number)
+                const [hours, minutes] = timeStr.split(':').map(Number)
+                return new Date(year, month - 1, day, hours, minutes)
+            }
+
+            const startDateObj = parseDate(newBooking.startDate, newBooking.startTime)
+            const endDateObj = parseDate(newBooking.endDate, newBooking.endTime)
+
+            if (isNaN(startDateObj.getTime()) || isNaN(endDateObj.getTime())) {
+                alert("Por favor, preencha a data e hora corretamente.")
+                setIsSubmitting(false)
+                return
+            }
+
+            const startISO = startDateObj.toISOString()
+            const endISO = endDateObj.toISOString()
+
+            // Payload limpo para o banco de dados (snake_case é tratado no serviço)
+            const bookingPayload = {
+                customer: newBooking.customer,
+                items: newBooking.items,
+                startDate: startISO,
+                endDate: endISO,
+                totalValue: newBooking.totalValue,
+                status: newBooking.status,
+                category: newBooking.category
+            }
+
             const needsAvailabilityCheck = ["confirmed", "picked_up"].includes(newBooking.status)
 
             if (needsAvailabilityCheck) {
                 const busyItems = await bookingService.checkAvailability(
                     newBooking.items,
-                    newBooking.startDate,
-                    newBooking.endDate
+                    startISO,
+                    endISO
                 )
 
                 const actualBusyItems = editingBooking
@@ -324,23 +393,24 @@ export default function Bookings({ isModalInitiallyOpen = false, onCloseModal = 
                         .filter(i => actualBusyItems.includes(i.id))
                         .map(i => i.name)
                         .join(', ')
-                    alert(`Itens já reservados: ${busyNames}`)
+                    alert(`Itens já reservados neste horário: ${busyNames}`)
                     setIsSubmitting(false)
                     return
                 }
             }
 
             if (editingBooking) {
-                await bookingService.updateBooking(editingBooking.id, newBooking)
+                await bookingService.updateBooking(editingBooking.id, bookingPayload)
             } else {
-                await bookingService.createBooking(newBooking)
+                await bookingService.createBooking(bookingPayload)
             }
 
             handleClose()
             await loadData()
             setTimeout(() => alert("✨ Reserva salva com sucesso!"), 100)
         } catch (error) {
-            alert("Erro ao salvar reserva.")
+            console.error("Erro completo ao salvar:", error)
+            alert(`Erro ao salvar: ${error.message || 'Verifique sua conexão'}`)
         } finally {
             setIsSubmitting(false)
         }
@@ -355,6 +425,76 @@ export default function Bookings({ isModalInitiallyOpen = false, onCloseModal = 
         }
     }
 
+    const handleCellClick = (day, hour) => {
+        const hString = String(hour).padStart(2, '0')
+        setNewBooking(prev => ({
+            ...prev,
+            startDate: format(day, 'yyyy-MM-dd'),
+            startTime: `${hString}:00`,
+            endDate: format(day, 'yyyy-MM-dd'),
+            endTime: `${hString}:00`
+        }))
+        setIsModalOpen(true)
+    }
+
+    // Filtrar bookings por busca (cliente ou telefone)
+    const filteredBookings = useMemo(() => {
+        return bookings.filter(b =>
+            b.customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            b.customer.phone?.includes(searchTerm)
+        )
+    }, [bookings, searchTerm])
+
+    // Função para calcular o estilo do card com suporte a múltiplas colunas (eventos simultâneos)
+    const getEventStyle = (booking, currentDay, allDayBookings) => {
+        const start = parseISO(booking.startDate)
+        const end = parseISO(booking.endDate)
+
+        const isStart = isSameDay(currentDay, start)
+        const isEnd = isSameDay(currentDay, end)
+
+        let displayHour = 8
+
+        if (isStart) {
+            displayHour = getHours(start) + getMinutes(start) / 60
+        } else if (isEnd) {
+            displayHour = getHours(end) + getMinutes(end) / 60
+        }
+
+        const visibleHour = Math.min(18, Math.max(8, displayHour))
+        const top = (visibleHour - 8) * 96
+
+        // Identificar conflitos (eventos que ocupam o mesmo "slot" visual)
+        const overlapping = allDayBookings
+            .map(b => {
+                const bStart = parseISO(b.startDate);
+                const bEnd = parseISO(b.endDate);
+                const bIsStart = isSameDay(currentDay, bStart);
+                const bIsEnd = isSameDay(currentDay, bEnd);
+                let bHour = 8;
+                if (bIsStart) bHour = getHours(bStart) + getMinutes(bStart) / 60;
+                else if (bIsEnd) bHour = getHours(bEnd) + getMinutes(bEnd) / 60;
+                return { id: b.id, hour: Math.min(18, Math.max(8, bHour)) };
+            })
+            .filter(b => Math.abs(b.hour - visibleHour) < 0.5) // Conflito se estiverem a menos de 30min
+            .sort((a, b) => a.id.localeCompare(b.id));
+
+        const totalOverlapping = overlapping.length;
+        const myIndex = overlapping.findIndex(b => b.id === booking.id);
+
+        // Calcular largura e posição lateral proporcional
+        const widthPercent = totalOverlapping > 1 ? (100 / totalOverlapping) : 100;
+        const leftPercent = totalOverlapping > 1 ? (myIndex * widthPercent) : 0;
+
+        return {
+            top: `${top}px`,
+            height: '96px', // Altura alinhada com a grade (h-24)
+            left: totalOverlapping > 1 ? `${leftPercent}%` : '8px',
+            width: totalOverlapping > 1 ? `calc(${widthPercent}% - 4px)` : 'calc(100% - 16px)',
+            zIndex: 10 + myIndex
+        }
+    }
+
     if (loading) return (
         <div className="flex flex-col items-center justify-center py-40 gap-4">
             <Loader2 size={40} className="animate-spin text-[#1D4ED8]" />
@@ -363,57 +503,224 @@ export default function Bookings({ isModalInitiallyOpen = false, onCloseModal = 
     )
 
     return (
-        <div className="space-y-8 animate-in fade-in duration-500">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-[#161B22] p-6 rounded-3xl border border-[#1E293B] shadow-2xl">
-                <div>
-                    <h1 className="text-4xl font-black text-white tracking-tighter">Agenda</h1>
-                    <p className="text-[#94A3B8] mt-1 flex items-center gap-2 font-bold uppercase text-[10px] tracking-widest">
-                        <CalendarIcon size={14} className="text-[#1D4ED8]" />
-                        {bookings.length} locações registradas
-                    </p>
-                </div>
-                <button
-                    onClick={() => setIsModalOpen(true)}
-                    className="w-full sm:w-auto bg-[#1D4ED8] hover:bg-[#1e40af] text-white px-6 py-3 rounded-2xl flex items-center justify-center gap-2 transition-all font-bold shadow-lg shadow-[#1D4ED8]/20 active:scale-95 group"
-                >
-                    <Plus size={22} className="group-hover:rotate-90 transition-transform duration-300" />
-                    Nova Locação
-                </button>
-            </div>
-
-            <div className="relative group">
-                <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-[#64748B] group-focus-within:text-[#1D4ED8] transition-colors" size={20} />
-                <input
-                    type="text"
-                    value={searchTerm}
-                    onChange={e => setSearchTerm(e.target.value)}
-                    placeholder="Buscar por cliente ou telefone..."
-                    className="w-full bg-[#161B22] border border-[#1E293B] rounded-2xl py-4 pl-14 pr-6 focus:outline-none focus:border-[#1D4ED8]/30 text-white placeholder-[#64748B] transition-all text-lg shadow-inner"
-                />
-            </div>
-
-            <div className="grid grid-cols-1 gap-6">
-                {filteredBookings.length > 0 ? (
-                    filteredBookings.map(booking => (
-                        <BookingCard
-                            key={booking.id}
-                            booking={booking}
-                            statusMap={statusMap}
-                            onEdit={handleEdit}
-                            onDelete={handleDelete}
-                        />
-                    ))
-                ) : (
-                    <div className="py-20 flex flex-col items-center justify-center border-2 border-dashed border-[#1E293B] rounded-[3rem] opacity-30">
-                        <CalendarIcon size={60} className="text-[#64748B] mb-4" />
-                        <h3 className="text-xl font-black text-white">Nenhuma reserva encontrada</h3>
-                        <p className="text-[#94A3B8] font-bold uppercase text-[10px] tracking-widest mt-2">Agende seu primeiro evento</p>
+        <div className="h-full flex flex-col gap-6 animate-in fade-in duration-500 overflow-hidden">
+            {/* Header de Ação Estilizado */}
+            <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-[#161B22] p-6 rounded-3xl border border-[#1E293B] shadow-2xl flex-shrink-0">
+                <div className="flex items-center gap-6">
+                    <div className="flex flex-col">
+                        <h1 className="text-3xl font-black text-white tracking-tighter">Agenda</h1>
+                        <p className="text-[#94A3B8] font-bold uppercase text-[10px] tracking-widest mt-1">
+                            {format(viewDate, "MMMM 'de' yyyy", { locale: ptBR })}
+                        </p>
                     </div>
-                )}
+
+                    <div className="flex items-center bg-[#0B0E14] p-1.5 rounded-2xl border border-[#1E293B]">
+                        <button
+                            onClick={() => setViewDate(addDays(viewDate, -7))}
+                            className="p-2 hover:bg-white/5 rounded-xl text-[#64748B] hover:text-white transition-all"
+                        >
+                            <ChevronLeft size={20} />
+                        </button>
+                        <button
+                            onClick={() => setViewDate(new Date())}
+                            className="px-4 py-2 text-xs font-black uppercase tracking-widest text-[#94A3B8] hover:text-[#1D4ED8] transition-colors"
+                        >
+                            Hoje
+                        </button>
+                        <button
+                            onClick={() => setViewDate(addDays(viewDate, 7))}
+                            className="p-2 hover:bg-white/5 rounded-xl text-[#64748B] hover:text-white transition-all"
+                        >
+                            <ChevronRight size={20} />
+                        </button>
+                    </div>
+                </div>
+
+                <div className="flex items-center gap-3 w-full sm:w-auto">
+                    <div className="relative flex-1 sm:w-64">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#64748B]" size={16} />
+                        <input
+                            type="text"
+                            value={searchTerm}
+                            onChange={e => setSearchTerm(e.target.value)}
+                            placeholder="Buscar cliente..."
+                            className="w-full bg-[#0B0E14] border border-[#1E293B] rounded-2xl py-3 pl-10 pr-4 focus:outline-none focus:border-[#1D4ED8]/30 text-white placeholder-[#64748B] transition-all text-sm font-bold"
+                        />
+                    </div>
+                    <button
+                        onClick={() => setIsModalOpen(true)}
+                        className="bg-[#1D4ED8] hover:bg-[#1e40af] text-white px-5 py-3 rounded-2xl flex items-center justify-center gap-2 transition-all font-bold shadow-lg shadow-[#1D4ED8]/20 active:scale-95 group whitespace-nowrap"
+                    >
+                        <Plus size={20} />
+                        Nova Locação
+                    </button>
+                </div>
+            </header>
+
+            {/* Layout Principal em 2 Colunas */}
+            <div className="flex gap-6 flex-1 min-h-0 overflow-hidden mb-4">
+                {/* Sidebar com Mini Calendário */}
+                <aside className="w-80 hidden lg:flex flex-col gap-6 flex-shrink-0 animate-in slide-in-from-left duration-500">
+                    <MiniCalendar
+                        currentMonth={currentMonth}
+                        selectedDate={viewDate}
+                        onDateClick={(date) => setViewDate(date)}
+                        onPrevMonth={() => setCurrentMonth(subMonths(currentMonth, 1))}
+                        onNextMonth={() => setCurrentMonth(addMonths(currentMonth, 1))}
+                    />
+
+                    <div className="bg-[#161B22] p-6 rounded-[2.5rem] border border-[#1E293B] flex-1 overflow-hidden flex flex-col">
+                        <h3 className="text-[10px] font-black uppercase tracking-widest text-[#64748B] mb-4">Legenda de Status</h3>
+                        <div className="space-y-4">
+                            {Object.entries(statusMap).map(([key, value]) => {
+                                const Icon = value.icon
+                                return (
+                                    <div key={key} className="flex items-center gap-3">
+                                        <div className={`p-2 rounded-xl ${value.bg}`}>
+                                            <Icon size={14} className={value.color} />
+                                        </div>
+                                        <span className="text-xs font-bold text-slate-300">{value.label}</span>
+                                    </div>
+                                )
+                            })}
+                        </div>
+                    </div>
+                </aside>
+
+                {/* Grid do Calendário (Estilo Teams) */}
+                <main className="flex-1 bg-[#161B22] rounded-[3rem] border border-[#1E293B] shadow-2xl flex flex-col relative overflow-hidden animate-in slide-in-from-right duration-500">
+                    {/* Header do Grid (Dias) */}
+                    <div className="flex border-b border-[#1E293B] bg-[#1D4ED8]/5">
+                        <div className="w-20 border-r border-[#1E293B] flex-shrink-0 h-16" />
+                        <div className="flex flex-1">
+                            {weekDays.map((day, idx) => {
+                                const isToday = isSameDay(day, new Date());
+                                return (
+                                    <div
+                                        key={idx}
+                                        className={`flex-1 text-center py-3 border-r border-[#1E293B] last:border-r-0 flex flex-col items-center justify-center gap-1 ${isToday ? 'bg-[#1D4ED8]/10' : ''}`}
+                                    >
+                                        <span className="text-[10px] font-black uppercase tracking-widest text-[#64748B]">
+                                            {format(day, 'EEE', { locale: ptBR })}
+                                        </span>
+                                        <span className={`w-8 h-8 flex items-center justify-center rounded-full text-lg font-black tracking-tight ${isToday ? 'bg-[#1D4ED8] text-white shadow-lg shadow-[#1D4ED8]/30' : 'text-white'}`}>
+                                            {format(day, 'd')}
+                                        </span>
+                                    </div>
+                                )
+                            })}
+                        </div>
+                    </div>
+
+                    {/* Corpo do Grid (Scrolling) */}
+                    <div ref={scrollRef} className="flex-1 overflow-y-auto custom-scrollbar relative">
+                        <div className="flex min-h-full">
+                            <div className="w-20 border-r border-[#1E293B] flex-shrink-0 bg-[#0B0E14]/30">
+                                {hours.map(hour => (
+                                    <div key={hour} className="h-24 px-3 flex flex-col items-end justify-start border-b border-[#1E293B]/20 pt-2">
+                                        <span className="text-[10px] font-black text-[#64748B] tabular-nums">
+                                            {String(hour).padStart(2, '0')}:00
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+
+                            <div className="flex flex-1 relative">
+                                {weekDays.map((day, dayIdx) => (
+                                    <div
+                                        key={dayIdx}
+                                        className="flex-1 border-r border-[#1E293B]/50 last:border-r-0 relative group"
+                                    >
+                                        {/* Linhas de Fundo e Botões de Clique */}
+                                        <div className="absolute inset-0">
+                                            {hours.map(hour => (
+                                                <div
+                                                    key={hour}
+                                                    onClick={() => handleCellClick(day, hour)}
+                                                    className="h-24 border-b border-[#1E293B]/20 relative group/cell cursor-pointer"
+                                                >
+                                                    <div className="absolute inset-x-2 top-2 h-8 rounded-xl bg-[#1D4ED8]/5 border border-dashed border-[#1D4ED8]/20 opacity-0 group-hover/cell:opacity-100 flex items-center justify-center transition-all">
+                                                        <Plus size={14} className="text-[#1D4ED8]" />
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+
+                                        {/* Eventos da Coluna - Posicionados Absolutamente */}
+                                        {filteredBookings
+                                            .filter(b => {
+                                                const start = startOfDay(parseISO(b.startDate))
+                                                const end = startOfDay(parseISO(b.endDate))
+                                                const current = startOfDay(day)
+                                                return isWithinInterval(current, { start, end })
+                                            })
+                                            .map((booking, idx, dayBookings) => {
+                                                const status = statusMap[booking.status] || statusMap.budget
+                                                const start = startOfDay(parseISO(booking.startDate))
+                                                const end = startOfDay(parseISO(booking.endDate))
+                                                const current = startOfDay(day)
+
+                                                const isStart = isSameDay(current, start)
+                                                const isEnd = isSameDay(current, end)
+
+                                                let typeLabel = "Em Locação"
+                                                if (isStart && isEnd) typeLabel = "Retirada/Devolução"
+                                                else if (isStart) typeLabel = "Retirada"
+                                                else if (isEnd) typeLabel = "Devolução"
+
+                                                const style = getEventStyle(booking, day, dayBookings)
+
+                                                return (
+                                                    <div
+                                                        key={booking.id}
+                                                        onClick={(e) => { e.stopPropagation(); handleEdit(booking); }}
+                                                        className={`
+                                                            absolute p-3.5 rounded-2xl border ${status.border} ${status.bg} 
+                                                            cursor-pointer hover:shadow-xl hover:scale-[1.01] transition-all
+                                                            flex flex-col gap-1.5 overflow-hidden backdrop-blur-md animate-in zoom-in-95 duration-200
+                                                        `}
+                                                        style={style}
+                                                    >
+                                                        <div className="flex items-center gap-2 overflow-hidden">
+                                                            <status.icon size={12} className={`${status.color} flex-shrink-0`} />
+                                                            <h4 className="text-[14px] font-black truncate text-white leading-none flex-1">{booking.customer.name}</h4>
+                                                            <button
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleDelete(booking.id);
+                                                                }}
+                                                                className="absolute top-1.5 right-1.5 p-1.5 bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white rounded-lg transition-all opacity-0 group-hover:opacity-100 z-20 shadow-lg"
+                                                                title="Excluir Locação"
+                                                            >
+                                                                <Trash2 size={12} />
+                                                            </button>
+                                                        </div>
+
+                                                        <div className="flex flex-col gap-2 mt-auto">
+                                                            <div className="flex items-center gap-1.5 opacity-80">
+                                                                <p className="text-[10px] font-black uppercase tracking-wider text-white truncate">
+                                                                    {typeLabel}
+                                                                </p>
+                                                            </div>
+                                                            <span className="text-[10px] font-black uppercase text-[#1D4ED8] bg-[#1D4ED8]/20 px-2 py-0.5 rounded-lg border border-[#1D4ED8]/20 w-fit truncate max-w-full">
+                                                                {booking.category || 'Geral'}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                )
+                                            })
+                                        }
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </main>
             </div>
 
+            {/* Modal de Cadastro */}
             {isModalOpen && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-xl transition-all duration-300">
+                <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/80 backdrop-blur-xl transition-all duration-300">
                     <div className="bg-[#161B22] w-full max-w-2xl max-h-[90vh] overflow-hidden rounded-[2.5rem] border border-[#1E293B] shadow-2xl flex flex-col animate-in zoom-in-95 duration-300">
                         <div className="flex justify-between items-center p-8 bg-gradient-to-r from-[#1D4ED8]/10 to-transparent border-b border-[#1E293B]">
                             <div>
@@ -443,13 +750,32 @@ export default function Bookings({ isModalInitiallyOpen = false, onCloseModal = 
                                         maxLength={15}
                                     />
                                 </div>
+
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-[#64748B] ml-1">Início (Retirada)</label>
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-[#64748B] ml-1">Data Retirada</label>
                                     <input type="date" required value={newBooking.startDate} onChange={e => setNewBooking({ ...newBooking, startDate: e.target.value })} className="w-full bg-[#0B0E14] border border-[#1E293B] rounded-2xl px-5 py-3 focus:border-[#1D4ED8]/50 outline-none text-white transition-all shadow-inner font-bold" />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-[#64748B] ml-1">Término (Devolvida)</label>
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-[#64748B] ml-1">Hora Retirada</label>
+                                    <input
+                                        type="time"
+                                        required
+                                        value={newBooking.startTime}
+                                        onChange={e => {
+                                            const time = e.target.value;
+                                            setNewBooking({ ...newBooking, startTime: time })
+                                        }}
+                                        className="w-full bg-[#0B0E14] border border-[#1E293B] rounded-2xl px-5 py-3 focus:border-[#1D4ED8]/50 outline-none text-white transition-all shadow-inner font-bold"
+                                    />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-[#64748B] ml-1">Data Devolução</label>
                                     <input type="date" required value={newBooking.endDate} onChange={e => setNewBooking({ ...newBooking, endDate: e.target.value })} className="w-full bg-[#0B0E14] border border-[#1E293B] rounded-2xl px-5 py-3 focus:border-[#1D4ED8]/50 outline-none text-white transition-all shadow-inner font-bold" />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-[#64748B] ml-1">Hora Devolução</label>
+                                    <input type="time" required value={newBooking.endTime} onChange={e => setNewBooking({ ...newBooking, endTime: e.target.value })} className="w-full bg-[#0B0E14] border border-[#1E293B] rounded-2xl px-5 py-3 focus:border-[#1D4ED8]/50 outline-none text-white transition-all shadow-inner font-bold" />
                                 </div>
                             </div>
 
@@ -459,36 +785,38 @@ export default function Bookings({ isModalInitiallyOpen = false, onCloseModal = 
                                 onToggle={toggleItemSelection}
                             />
 
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black uppercase tracking-widest text-[#64748B] ml-1">Status da Reserva</label>
-                                <div className="relative">
-                                    <select
-                                        value={newBooking.status}
-                                        onChange={e => setNewBooking({ ...newBooking, status: e.target.value })}
-                                        className="w-full bg-[#0B0E14] border border-[#1E293B] rounded-2xl px-5 py-3 focus:border-[#1D4ED8]/50 outline-none text-white transition-all appearance-none cursor-pointer font-bold"
-                                    >
-                                        {Object.entries(statusMap).map(([key, value]) => (
-                                            <option key={key} value={key}>{value.label}</option>
-                                        ))}
-                                    </select>
-                                    <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 text-[#64748B] pointer-events-none" size={18} />
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-[#64748B] ml-1">Status da Reserva</label>
+                                    <div className="relative">
+                                        <select
+                                            value={newBooking.status}
+                                            onChange={e => setNewBooking({ ...newBooking, status: e.target.value })}
+                                            className="w-full bg-[#0B0E14] border border-[#1E293B] rounded-2xl px-5 py-3 focus:border-[#1D4ED8]/50 outline-none text-white transition-all appearance-none cursor-pointer font-bold"
+                                        >
+                                            {Object.entries(statusMap).map(([key, value]) => (
+                                                <option key={key} value={key}>{value.label}</option>
+                                            ))}
+                                        </select>
+                                        <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 text-[#64748B] pointer-events-none" size={18} />
+                                    </div>
                                 </div>
-                            </div>
 
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black uppercase tracking-widest text-[#64748B] ml-1">Categoria do Evento</label>
-                                <div className="relative">
-                                    <select
-                                        value={newBooking.category}
-                                        onChange={e => setNewBooking({ ...newBooking, category: e.target.value })}
-                                        className="w-full bg-[#0B0E14] border border-[#1E293B] rounded-2xl px-5 py-3 focus:border-[#1D4ED8]/50 outline-none text-white transition-all appearance-none cursor-pointer font-bold"
-                                    >
-                                        <option value="">Selecione...</option>
-                                        {categories.map(cat => (
-                                            <option key={cat.id} value={cat.name}>{cat.name}</option>
-                                        ))}
-                                    </select>
-                                    <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 text-[#64748B] pointer-events-none" size={18} />
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-[#64748B] ml-1">Categoria do Evento</label>
+                                    <div className="relative">
+                                        <select
+                                            value={newBooking.category}
+                                            onChange={e => setNewBooking({ ...newBooking, category: e.target.value })}
+                                            className="w-full bg-[#0B0E14] border border-[#1E293B] rounded-2xl px-5 py-3 focus:border-[#1D4ED8]/50 outline-none text-white transition-all appearance-none cursor-pointer font-bold"
+                                        >
+                                            <option value="">Selecione...</option>
+                                            {categories.map(cat => (
+                                                <option key={cat.id} value={cat.name}>{cat.name}</option>
+                                            ))}
+                                        </select>
+                                        <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 text-[#64748B] pointer-events-none" size={18} />
+                                    </div>
                                 </div>
                             </div>
 
@@ -505,13 +833,24 @@ export default function Bookings({ isModalInitiallyOpen = false, onCloseModal = 
                                         />
                                     </div>
                                 </div>
-                                <button
-                                    type="submit"
-                                    disabled={isSubmitting}
-                                    className="bg-[#1D4ED8] hover:bg-[#1e40af] disabled:bg-[#1E293B] text-white font-black px-10 py-5 rounded-[1.5rem] shadow-xl shadow-[#1D4ED8]/10 active:scale-95 transition-all text-lg flex items-center gap-3"
-                                >
-                                    {isSubmitting ? <Loader2 className="animate-spin" /> : 'CONCLUIR'}
-                                </button>
+                                <div className="flex flex-col gap-2">
+                                    <button
+                                        type="submit"
+                                        disabled={isSubmitting}
+                                        className="bg-[#1D4ED8] hover:bg-[#1e40af] text-white px-10 py-5 rounded-3xl font-black uppercase tracking-widest text-xs transition-all shadow-xl shadow-[#1D4ED8]/20 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        {isSubmitting ? 'Salvando...' : editingBooking ? 'Salvar Alterações' : 'Confirmar Reserva'}
+                                    </button>
+                                    {editingBooking && (
+                                        <button
+                                            type="button"
+                                            onClick={() => handleDelete(editingBooking.id)}
+                                            className="text-red-400 hover:text-red-300 text-[10px] font-black uppercase tracking-widest py-2 transition-all"
+                                        >
+                                            Excluir Locação
+                                        </button>
+                                    )}
+                                </div>
                             </div>
                         </form>
                     </div>

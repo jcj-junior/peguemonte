@@ -35,7 +35,7 @@ export const bookingService = {
                 start_date: booking.startDate,
                 end_date: booking.endDate,
                 total_value: booking.totalValue,
-                status: "budget",
+                status: booking.status || "budget",
                 category: booking.category
             };
 
@@ -56,18 +56,21 @@ export const bookingService = {
     async updateBooking(id, updates) {
         try {
             const payload = {};
-            if (updates.customer) payload.customer = updates.customer;
-            if (updates.items) payload.items = updates.items;
-            if (updates.startDate) payload.start_date = updates.startDate;
-            if (updates.endDate) payload.end_date = updates.endDate;
-            if (updates.totalValue) payload.total_value = updates.totalValue;
-            if (updates.status) payload.status = updates.status;
-            if (updates.category) payload.category = updates.category;
+            // Usar verificação de propriedade para permitir valores falsy (0, "", etc)
+            if ('customer' in updates) payload.customer = updates.customer;
+            if ('items' in updates) payload.items = updates.items;
+            if ('startDate' in updates) payload.start_date = updates.startDate;
+            if ('endDate' in updates) payload.end_date = updates.endDate;
+            if ('totalValue' in updates) payload.total_value = updates.totalValue;
+            if ('status' in updates) payload.status = updates.status;
+            if ('category' in updates) payload.category = updates.category;
 
             const { data, error } = await supabase
                 .from('bookings')
                 .update(payload)
-                .eq('id', id);
+                .eq('id', id)
+                .select()
+                .single();
 
             if (error) throw error;
             return data;
