@@ -1,33 +1,59 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../supabase'
-import { Lock, Mail, Loader2, ArrowRight, Sparkles, CheckCircle2 } from 'lucide-react'
+import { Lock, Mail, Loader2, ArrowRight, Sparkles, CheckCircle2, UserPlus } from 'lucide-react'
 
 export default function Login({ onLogin }) {
     const [loading, setLoading] = useState(false)
+    const [isLogin, setIsLogin] = useState(true)
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [error, setError] = useState(null)
     const [success, setSuccess] = useState(false)
 
-    const handleLogin = async (e) => {
+    const handleAuth = async (e) => {
         e.preventDefault()
         setLoading(true)
         setError(null)
 
         try {
-            const { data, error: authError } = await supabase.auth.signInWithPassword({
-                email,
-                password,
-            })
+            if (isLogin) {
+                const { data, error: authError } = await supabase.auth.signInWithPassword({
+                    email,
+                    password,
+                })
+                if (authError) throw authError
 
-            if (authError) throw authError
+                setSuccess(true)
+                setTimeout(() => {
+                    onLogin(data.user)
+                }, 1000)
+            } else {
+                const { data, error: authError } = await supabase.auth.signUp({
+                    email,
+                    password,
+                    options: {
+                        data: {
+                            role: 'manager'
+                        }
+                    }
+                })
+                if (authError) throw authError
 
-            setSuccess(true)
-            setTimeout(() => {
-                onLogin(data.user)
-            }, 1000)
+                if (data.user && !data.session) {
+                    setError('Cadastro realizado. Verifique seu e-mail para confirmar a conta.')
+                    setIsLogin(true)
+                } else if (data.session) {
+                    setSuccess(true)
+                    setTimeout(() => {
+                        onLogin(data.user)
+                    }, 1000)
+                }
+            }
         } catch (err) {
-            setError(err.message === 'Invalid login credentials' ? 'E-mail ou senha incorretos' : err.message)
+            let message = err.message
+            if (message === 'Invalid login credentials') message = 'E-mail ou senha incorretos'
+            if (message === 'User already registered') message = 'Este e-mail já está cadastrado'
+            setError(message)
         } finally {
             setLoading(false)
         }
@@ -43,13 +69,13 @@ export default function Login({ onLogin }) {
                 {/* Logo Section */}
                 <div className="text-center mb-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
                     <div className="inline-flex items-center justify-center p-4 bg-[#1D4ED8] rounded-[2rem] shadow-2xl shadow-[#1D4ED8]/30 mb-6 group transition-transform hover:scale-110">
-                        <Lock size={32} className="text-white" />
+                        {isLogin ? <Lock size={32} className="text-white" /> : <UserPlus size={32} className="text-white" />}
                     </div>
                     <h1 className="text-4xl font-black text-white tracking-tighter">
                         Pegue<span className="text-[#1D4ED8]">e</span>Monte
                     </h1>
                     <p className="text-[#94A3B8] mt-2 font-bold uppercase text-[10px] tracking-[0.3em]">
-                        Sistema de Gestão de Acervo
+                        {isLogin ? 'Sistema de Gestão de Acervo' : 'Crie sua conta de administrador'}
                     </p>
                 </div>
 
@@ -57,7 +83,7 @@ export default function Login({ onLogin }) {
                 <div className="bg-[#161B22] p-10 rounded-[3rem] border border-[#1E293B] shadow-2xl relative overflow-hidden group">
                     <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#1D4ED8] to-transparent opacity-50" />
 
-                    <form onSubmit={handleLogin} className="space-y-6">
+                    <form onSubmit={handleAuth} className="space-y-6">
                         <div className="space-y-2">
                             <label className="text-[10px] font-black text-[#64748B] uppercase tracking-widest ml-1">E-mail de Acesso</label>
                             <div className="relative group">
@@ -89,8 +115,8 @@ export default function Login({ onLogin }) {
                         </div>
 
                         {error && (
-                            <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-2xl animate-in shake duration-300">
-                                <p className="text-xs font-bold text-red-500 text-center">{error}</p>
+                            <div className={`p-4 border rounded-2xl animate-in shake duration-300 ${error.includes('Verifique seu e-mail') ? 'bg-blue-500/10 border-blue-500/20' : 'bg-red-500/10 border-red-500/20'}`}>
+                                <p className={`text-xs font-bold text-center ${error.includes('Verifique seu e-mail') ? 'text-blue-500' : 'text-red-500'}`}>{error}</p>
                             </div>
                         )}
 
@@ -108,21 +134,28 @@ export default function Login({ onLogin }) {
                             ) : success ? (
                                 <>
                                     <CheckCircle2 size={20} />
-                                    Acesso Autorizado
+                                    {isLogin ? 'Acesso Autorizado' : 'Conta Criada'}
                                 </>
                             ) : (
                                 <>
-                                    Entrar no Sistema
+                                    {isLogin ? 'Entrar no Sistema' : 'Cadastrar agora'}
                                     <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
                                 </>
                             )}
                         </button>
                     </form>
 
-                    <div className="mt-8 pt-8 border-t border-[#1E293B] text-center">
+                    <div className="mt-8 pt-6 border-t border-[#1E293B] text-center space-y-4">
+                        <button
+                            onClick={() => { setIsLogin(!isLogin); setError(null); }}
+                            className="text-[10px] font-black text-[#1D4ED8] uppercase tracking-widest hover:underline decoration-2 underline-offset-4"
+                        >
+                            {isLogin ? 'Não tem uma conta? Cadastre-se' : 'Já possui conta? Faça login'}
+                        </button>
+
                         <p className="text-[10px] font-bold text-[#64748B] uppercase tracking-widest flex items-center justify-center gap-2">
                             <Sparkles size={12} className="text-[#1D4ED8]" />
-                            Protegido por Supabase Auth
+                            Segurança Supabase Auth
                         </p>
                     </div>
                 </div>
