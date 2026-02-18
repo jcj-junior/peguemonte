@@ -5,6 +5,7 @@ import Bookings from './components/Bookings'
 import { LayoutDashboard, Package, Calendar, Settings, Plus, BarChart2, Users, Tag } from 'lucide-react'
 import Categories from './components/Categories'
 import Reports from './components/Reports'
+import Clients from './components/Clients'
 
 const NavButton = ({ active, onClick, icon: Icon, label }) => (
     <button
@@ -107,6 +108,9 @@ function App() {
                 )}
                 {activeTab === 'analytics' && (
                     <Reports />
+                )}
+                {activeTab === 'clients' && (
+                    <Clients />
                 )}
             </main>
 
