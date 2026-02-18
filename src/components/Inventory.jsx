@@ -29,7 +29,7 @@ const ItemCard = memo(({ item, onEdit, onDelete }) => (
         </div>
 
         <div className="col-span-2">
-            <code className="text-[10px] font-black text-[#1D4ED8] bg-[#1D4ED8]/5 px-2 py-1 rounded border border-[#1D4ED8]/10 uppercase tracking-tighter">
+            <code className="text-xs font-black text-[#1D4ED8] bg-[#1D4ED8]/5 px-2 py-1 rounded border border-[#1D4ED8]/10 uppercase tracking-tighter shadow-sm">
                 {item.sku || 'N/A'}
             </code>
         </div>
