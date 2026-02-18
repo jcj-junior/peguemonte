@@ -4,6 +4,7 @@ import Inventory from './components/Inventory'
 import Bookings from './components/Bookings'
 import { LayoutDashboard, Package, Calendar, Settings, Plus, BarChart2, Users, Tag } from 'lucide-react'
 import Categories from './components/Categories'
+import Reports from './components/Reports'
 
 const NavButton = ({ active, onClick, icon: Icon, label }) => (
     <button
@@ -16,6 +17,7 @@ const NavButton = ({ active, onClick, icon: Icon, label }) => (
         <span className="text-sm font-bold tracking-tight">{label}</span>
     </button>
 )
+
 
 function App() {
     const [activeTab, setActiveTab] = useState('dashboard')
@@ -102,6 +104,9 @@ function App() {
                         isModalInitiallyOpen={openBookingModal}
                         onCloseModal={() => setOpenBookingModal(false)}
                     />
+                )}
+                {activeTab === 'analytics' && (
+                    <Reports />
                 )}
             </main>
 
