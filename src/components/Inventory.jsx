@@ -9,55 +9,72 @@ const generateSKU = () => {
 }
 
 const ItemCard = memo(({ item, onEdit, onDelete }) => (
-    <div className="bg-[#161B22] rounded-3xl overflow-hidden border border-[#1E293B] group flex flex-col h-full hover:border-[#1D4ED8]/30 transition-all duration-500 shadow-xl">
-        <div className="aspect-square bg-[#0B0E14] relative overflow-hidden">
-            {item.imageUrl || item.photoURL ? (
-                <img
-                    src={item.imageUrl || item.photoURL}
-                    alt={item.name}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                    loading="lazy"
-                />
-            ) : (
-                <div className="w-full h-full flex items-center justify-center text-slate-600">
-                    <Package size={48} strokeWidth={1.5} />
-                </div>
-            )}
-            <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0">
-                <button
-                    onClick={() => onEdit(item)}
-                    className="p-2 bg-[#0B0E14]/90 rounded-xl text-[#1D4ED8] border border-[#1D4ED8]/20 hover:bg-[#1D4ED8] hover:text-white transition-all shadow-xl backdrop-blur-md"
-                    title="Editar item"
-                >
-                    <Edit size={18} />
-                </button>
-                <button
-                    onClick={() => onDelete(item.id)}
-                    className="p-2 bg-[#0B0E14]/90 rounded-xl text-red-400 hover:bg-red-600 hover:text-white transition-all shadow-xl backdrop-blur-md"
-                    title="Excluir item"
-                >
-                    <Trash2 size={18} />
-                </button>
+    <div className="grid grid-cols-12 items-center p-4 hover:bg-white/[0.02] transition-colors gap-4 border-b border-[#1E293B] last:border-0 group">
+        <div className="col-span-3 flex items-center gap-4">
+            <div className="h-12 w-12 rounded-xl bg-[#0B0E14] border border-[#1E293B] flex-shrink-0 flex items-center justify-center overflow-hidden">
+                {item.imageUrl || item.photoURL ? (
+                    <img
+                        src={item.imageUrl || item.photoURL}
+                        alt={item.name}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                        loading="lazy"
+                    />
+                ) : (
+                    <Package size={20} className="text-[#64748B]" />
+                )}
             </div>
-            <div className="absolute bottom-3 left-3">
-                <span className="bg-[#0B0E14]/80 backdrop-blur-md text-[10px] font-black text-white px-2 py-1 rounded-lg border border-white/10 uppercase tracking-widest">
-                    {item.sku || 'N/A'}
-                </span>
+            <div className="min-w-0">
+                <h3 className="font-bold text-sm text-white truncate">{item.name}</h3>
             </div>
         </div>
-        <div className="p-5 flex flex-col flex-1">
-            <div className="flex items-start justify-between mb-2">
-                <span className="text-[10px] font-black uppercase tracking-widest text-[#1D4ED8] bg-[#1D4ED8]/10 px-2 py-1 rounded-lg">
-                    {item.category || 'Sem Categoria'}
-                </span>
-                <span className="text-sm font-black text-white">
-                    R$ {Number(item.price || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                </span>
-            </div>
-            <h3 className="font-black text-lg text-white group-hover:text-[#1D4ED8] transition-colors line-clamp-1">{item.name}</h3>
-            <p className="text-sm text-[#94A3B8] line-clamp-2 mt-2 flex-1 italic font-medium">
-                {item.description || 'Sem descrição detalhada'}
+
+        <div className="col-span-2">
+            <code className="text-[10px] font-black text-[#1D4ED8] bg-[#1D4ED8]/5 px-2 py-1 rounded border border-[#1D4ED8]/10 uppercase tracking-tighter">
+                {item.sku || 'N/A'}
+            </code>
+        </div>
+
+        <div className="col-span-2">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 bg-white/5 px-2 py-1 rounded-lg border border-white/10">
+                {item.category || 'Geral'}
+            </span>
+        </div>
+
+        <div className="col-span-1">
+            <p className="text-sm font-black text-white">
+                R$ {Number(item.price || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
             </p>
+        </div>
+
+        <div className="col-span-2">
+            <div className="flex items-center gap-2">
+                <span className={`text-xs font-black ${item.quantity <= 1 ? 'text-red-500' : 'text-[#10B981]'}`}>
+                    {item.quantity} un
+                </span>
+                <div className="h-1.5 w-12 bg-[#0B0E14] rounded-full overflow-hidden border border-[#1E293B] hidden sm:block">
+                    <div
+                        className={`h-full rounded-full ${item.quantity <= 1 ? 'bg-red-500' : 'bg-[#10B981]'}`}
+                        style={{ width: `${Math.min(100, item.quantity * 10)}%` }}
+                    />
+                </div>
+            </div>
+        </div>
+
+        <div className="col-span-2 flex justify-end gap-2">
+            <button
+                onClick={() => onEdit(item)}
+                className="p-2 bg-white/5 text-[#94A3B8] border border-[#1E293B] rounded-xl hover:bg-[#1D4ED8]/10 hover:text-[#1D4ED8] hover:border-[#1D4ED8]/20 transition-all"
+                title="Editar"
+            >
+                <Edit size={16} />
+            </button>
+            <button
+                onClick={() => onDelete(item.id)}
+                className="p-2 bg-white/5 text-[#94A3B8] border border-[#1E293B] rounded-xl hover:bg-red-500/10 hover:text-red-500 hover:border-red-500/20 transition-all"
+                title="Excluir"
+            >
+                <Trash2 size={16} />
+            </button>
         </div>
     </div>
 ))
@@ -254,15 +271,25 @@ export default function Inventory({ isModalInitiallyOpen = false, onCloseModal =
                     <p className="text-[#94A3B8] font-black uppercase text-[10px] tracking-widest animate-pulse">Sincronizando estoque...</p>
                 </div>
             ) : filteredItems.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-                    {filteredItems.map(item => (
-                        <ItemCard
-                            key={item.id}
-                            item={item}
-                            onEdit={handleEdit}
-                            onDelete={handleDelete}
-                        />
-                    ))}
+                <div className="bg-[#161B22] rounded-[2.5rem] border border-[#1E293B] overflow-hidden shadow-2xl">
+                    <div className="grid grid-cols-12 px-8 py-4 bg-[#0B0E14]/30 border-b border-[#1E293B] text-[10px] font-black text-[#64748B] uppercase tracking-[0.2em]">
+                        <div className="col-span-3">Item</div>
+                        <div className="col-span-2">Código Artefato</div>
+                        <div className="col-span-2">Categoria</div>
+                        <div className="col-span-1">Preço Unit.</div>
+                        <div className="col-span-2">Disponibilidade</div>
+                        <div className="col-span-2 text-right">Ações</div>
+                    </div>
+                    <div className="divide-y divide-[#1E293B] p-4">
+                        {filteredItems.map(item => (
+                            <ItemCard
+                                key={item.id}
+                                item={item}
+                                onEdit={handleEdit}
+                                onDelete={handleDelete}
+                            />
+                        ))}
+                    </div>
                 </div>
             ) : (
                 <div className="text-center py-40 bg-[#161B22]/50 rounded-[3rem] border-2 border-dashed border-[#1E293B]">

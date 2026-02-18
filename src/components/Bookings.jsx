@@ -208,6 +208,7 @@ export default function Bookings({ isModalInitiallyOpen = false, onCloseModal = 
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [editingBooking, setEditingBooking] = useState(null)
     const [searchTerm, setSearchTerm] = useState('')
+    const [statusFilter, setStatusFilter] = useState('all')
 
     // Calendário State
     const [viewDate, setViewDate] = useState(new Date())
@@ -437,13 +438,15 @@ export default function Bookings({ isModalInitiallyOpen = false, onCloseModal = 
         setIsModalOpen(true)
     }
 
-    // Filtrar bookings por busca (cliente ou telefone)
+    // Filtrar bookings por busca (cliente ou telefone) e status
     const filteredBookings = useMemo(() => {
-        return bookings.filter(b =>
-            b.customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            b.customer.phone?.includes(searchTerm)
-        )
-    }, [bookings, searchTerm])
+        return bookings.filter(b => {
+            const matchesSearch = b.customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                b.customer.phone?.includes(searchTerm);
+            const matchesStatus = statusFilter === 'all' || b.status === statusFilter;
+            return matchesSearch && matchesStatus;
+        })
+    }, [bookings, searchTerm, statusFilter])
 
     // Função para calcular o estilo do card com suporte a múltiplas colunas (eventos simultâneos)
     const getEventStyle = (booking, currentDay, allDayBookings) => {
@@ -537,6 +540,18 @@ export default function Bookings({ isModalInitiallyOpen = false, onCloseModal = 
                 </div>
 
                 <div className="flex items-center gap-3 w-full sm:w-auto">
+                    <select
+                        value={statusFilter}
+                        onChange={e => setStatusFilter(e.target.value)}
+                        className="bg-[#0B0E14] border border-[#1E293B] rounded-2xl py-3 px-4 focus:outline-none focus:border-[#1D4ED8]/30 text-white text-sm font-bold appearance-none cursor-pointer hover:bg-white/[0.02] transition-all min-w-[140px]"
+                    >
+                        <option value="all" className="bg-[#161B22] text-white">Todos Status</option>
+                        {Object.entries(statusMap).map(([key, value]) => (
+                            <option key={key} value={key} className="bg-[#161B22] text-white">
+                                {value.label}
+                            </option>
+                        ))}
+                    </select>
                     <div className="relative flex-1 sm:w-64">
                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#64748B]" size={16} />
                         <input
@@ -557,37 +572,9 @@ export default function Bookings({ isModalInitiallyOpen = false, onCloseModal = 
                 </div>
             </header>
 
-            {/* Layout Principal em 2 Colunas */}
+            {/* Layout Principal */}
             <div className="flex gap-6 flex-1 min-h-0 overflow-hidden mb-4">
-                {/* Sidebar com Mini Calendário */}
-                <aside className="w-80 hidden lg:flex flex-col gap-6 flex-shrink-0 animate-in slide-in-from-left duration-500">
-                    <MiniCalendar
-                        currentMonth={currentMonth}
-                        selectedDate={viewDate}
-                        onDateClick={(date) => setViewDate(date)}
-                        onPrevMonth={() => setCurrentMonth(subMonths(currentMonth, 1))}
-                        onNextMonth={() => setCurrentMonth(addMonths(currentMonth, 1))}
-                    />
-
-                    <div className="bg-[#161B22] p-6 rounded-[2.5rem] border border-[#1E293B] flex-1 overflow-hidden flex flex-col">
-                        <h3 className="text-[10px] font-black uppercase tracking-widest text-[#64748B] mb-4">Legenda de Status</h3>
-                        <div className="space-y-4">
-                            {Object.entries(statusMap).map(([key, value]) => {
-                                const Icon = value.icon
-                                return (
-                                    <div key={key} className="flex items-center gap-3">
-                                        <div className={`p-2 rounded-xl ${value.bg}`}>
-                                            <Icon size={14} className={value.color} />
-                                        </div>
-                                        <span className="text-xs font-bold text-slate-300">{value.label}</span>
-                                    </div>
-                                )
-                            })}
-                        </div>
-                    </div>
-                </aside>
-
-                {/* Grid do Calendário (Estilo Teams) */}
+                {/* Grid do Calendário (Estilo Teams) - Agora col-span-full */}
                 <main className="flex-1 bg-[#161B22] rounded-[3rem] border border-[#1E293B] shadow-2xl flex flex-col relative overflow-hidden animate-in slide-in-from-right duration-500">
                     {/* Header do Grid (Dias) */}
                     <div className="flex border-b border-[#1E293B] bg-[#1D4ED8]/5">

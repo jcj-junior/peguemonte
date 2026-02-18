@@ -28,7 +28,9 @@ export const inventoryService = {
                 price: item.price,
                 quantity: item.quantity,
                 description: item.description,
-                image_url: item.imageUrl
+                image_url: item.imageUrl,
+                sku: item.sku,
+                quantity: item.quantity
             };
 
             const { data, error } = await supabase
@@ -54,6 +56,8 @@ export const inventoryService = {
             if (updates.quantity) payload.quantity = updates.quantity;
             if (updates.description) payload.description = updates.description;
             if (updates.imageUrl) payload.image_url = updates.imageUrl;
+            if (updates.sku) payload.sku = updates.sku;
+            if (updates.quantity !== undefined) payload.quantity = updates.quantity;
 
             const { data, error } = await supabase
                 .from('items')
